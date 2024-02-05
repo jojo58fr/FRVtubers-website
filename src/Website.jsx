@@ -3,6 +3,9 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './Website.scss';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEarth, faHandshake, faUsers, faVideo } from '@fortawesome/free-solid-svg-icons'
+
 function Website() {
   const [count, setCount] = useState(0)
 
@@ -28,10 +31,10 @@ function Website() {
                     <div className="container">
                         <div className="hero-inner">
                             <div className="hero-copy">
-                                <h1 className="hero-title mt-0">Vtubers et Fans </h1>
+                                <h1 className="hero-title mt-0">Vtubers et Fans ensembles 🇫🇷</h1>
                                 <p className="hero-paragraph">Serveur communautaire de Vtubing Francophone. Retrouvez les informations sur vos créateurs préférés via le Wiki et découvrez un discord communautaire pour les fans de vtubing !</p>
                                 <p className="hero-paragraph">Vous êtes créateurs/clippeur Francophone ? Cette place est aussi pour vous !</p>
-                                <div className="hero-cta"><a className="button button-primary" href="https://discord.gg/meyHQYWvjU">Accéder à notre discord</a><a className="button" href="https://www.wiki.frvtubers.com/">Accéder au wiki</a></div>
+                                <div className="hero-cta"><a className="button button-primary" href="https://discord.gg/meyHQYWvjU" target="_blank">Accéder à notre discord</a><a className="button" href="https://www.wiki.frvtubers.com/" target="_blank">Accéder au wiki</a></div>
                             </div>
                             <div className="hero-figure anime-element">
                                 <svg className="placeholder" width="528" height="396" viewBox="0 0 528 396">
@@ -46,29 +49,56 @@ function Website() {
                     </div>
                 </section>
 
+                <section className="pricing section">
+                    <div className="container-sm">
+                        <div className="pricing-inner section-inner">
+                            <div className="pricing-header text-center">
+                                <h2 className="section-title mt-0">C'est quoi FRVtubers ?</h2>
+                                <p className="section-paragraph mb-0">
+                                    Cette plateforme a pour vocation de réunir les communautés dévouées aux Vtubers et à leurs fans, en leur offrant un espace d'interaction et de partage. 
+                                </p><br/>
+                                <p className="section-paragraph mb-0">
+                                    Nous souhaitons vraiment créer un espace de rassemblement pensé et pour les Vtuber. Notre véritable intention est de stimuler la progression et la propagation de la culture du Vtubing au sein de la communauté francophone, en ayant défini des objectifs à court, moyen et long termes que nous nous engageons à accomplir pour concrétiser cette ambition.
+                                </p>
+                            </div>
+                        </div>
+                        </div>
+                </section>
+
                 <section className="features section">
                     <div className="container">
                         <div className="features-inner section-inner has-bottom-divider">
+                        <h2 className="section-title mt-0">Quelques objectifs</h2>
                             <div className="features-wrap">
                                 <div className="feature text-center is-revealing">
                                     <div className="feature-inner">
                                         <div className="feature-icon">
-                                            <img src="dist/images/feature-icon-01.svg" alt="Feature 01"/>
+                                            {/* <img src="dist/images/feature-icon-01.svg" alt="Feature 01"/> */}
+                                            <FontAwesomeIcon size="4x" icon={ faUsers } />
                                         </div>
-                                        <h4 className="feature-title mt-24">Be Productive</h4>
-                                        <p className="text-sm mb-0">Fermentum posuere urna nec tincidunt praesent semper feugiat nibh. A arcu cursus vitae congue mauris. Nam at lectus urna duis convallis. Mauris rhoncus aenean vel elit scelerisque mauris.</p>
+                                        <h4 className="feature-title mt-24">Communauté francophone</h4>
+                                        <p className="text-sm mb-0">Créations d'Évènements ou collab en lien avec des groupes communautaires Vtuber ou non</p>
                                     </div>
                                 </div>
                                 <div className="feature text-center is-revealing">
                                     <div className="feature-inner">
                                         <div className="feature-icon">
-                                            <img src="dist/images/feature-icon-02.svg" alt="Feature 02"/>
+                                            <FontAwesomeIcon size="4x" icon={ faHandshake } />
                                         </div>
-                                        <h4 className="feature-title mt-24">Be Productive</h4>
-                                        <p className="text-sm mb-0">Fermentum posuere urna nec tincidunt praesent semper feugiat nibh. A arcu cursus vitae congue mauris. Nam at lectus urna duis convallis. Mauris rhoncus aenean vel elit scelerisque mauris.</p>
+                                        <h4 className="feature-title mt-24">Représentation physique</h4>
+                                        <p className="text-sm mb-0">Vulgarisation du concept de vtubing et des technologies lors de conventions, évènements..etc</p>
                                     </div>
                                 </div>
                                 <div className="feature text-center is-revealing">
+                                    <div className="feature-inner">
+                                        <div className="feature-icon">
+                                            <FontAwesomeIcon size="4x" icon={ faVideo } />
+                                        </div>
+                                        <h4 className="feature-title mt-24">Aide aux créateurs</h4>
+                                        <p className="text-sm mb-0">Vulgarisation/Documentation du vtubing, de la technologie et mise en avant de nos créateurs français sur différents réseaux (youtube, tiktok, bestof...)</p>
+                                    </div>
+                                </div>
+                                {/* <div className="feature text-center is-revealing">
                                     <div className="feature-inner">
                                         <div className="feature-icon">
                                             <img src="dist/images/feature-icon-03.svg" alt="Feature 03"/>
@@ -103,13 +133,13 @@ function Website() {
                                         <h4 className="feature-title mt-24">Be Productive</h4>
                                         <p className="text-sm mb-0">Fermentum posuere urna nec tincidunt praesent semper feugiat nibh. A arcu cursus vitae congue mauris. Nam at lectus urna duis convallis. Mauris rhoncus aenean vel elit scelerisque mauris.</p>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section className="pricing section">
+                {/* <section className="pricing section">
                     <div className="container-sm">
                         <div className="pricing-inner section-inner">
                             <div className="pricing-header text-center">
@@ -147,17 +177,22 @@ function Website() {
                             </div>
                         </div>
                     </div>
-                </section> 
+                </section>  */}
 
                 <section className="cta section">
                     <div className="container">
                         <div className="cta-inner section-inner">
                             <h3 className="section-title mt-0">Accéder à notre discord communautaire</h3>
                             <div className="cta-cta">
-                                <a className="button button-primary button-wide-mobile" href="https://discord.gg/meyHQYWvjU">Clique ici</a>
+                                <a className="button button-primary button-wide-mobile" href="https://discord.gg/meyHQYWvjU" target="_blank">Clique ici</a>
                             </div>
                         </div>
                     </div>
+                </section>
+
+                <section className="cta section">
+                    <small style={{padding: "10px"}}>Crédit:</small> <br/>
+                    <small style={{padding: "10px"}}>Merci à <a href="https://www.twitch.tv/lunahyu" target="_blank">LunaHyu</a> pour nous avoir autorisé l'usage du modèle féminin de <a href="https://www.twitch.tv/takudev" target="_blank">TakuDev</a>.</small>
                 </section>
             </main>
 
@@ -166,10 +201,10 @@ function Website() {
                     <div className="site-footer-inner">
                         <div className="brand footer-brand">
                             <a href="#">
-                                <img className="header-logo-image" src="dist/images/logo.svg" alt="Logo"/>
+                                <img width="32px" className="header-logo-image" src="./FRVtubersLogo.png" alt="Logo"/>
                             </a>
                         </div>
-                        <ul className="footer-links list-reset">
+                        {/* <ul className="footer-links list-reset">
                             <li>
                                 <a href="#">Contact</a>
                             </li>
@@ -182,9 +217,9 @@ function Website() {
                             <li>
                                 <a href="#">Support</a>
                             </li>
-                        </ul>
-                        <ul className="footer-social-links list-reset">
-                            <li>
+                        </ul> */}
+                         <ul className="footer-social-links list-reset">
+                            {/*<li>
                                 <a href="#">
                                     <span className="screen-reader-text">Facebook</span>
                                     <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
@@ -207,9 +242,9 @@ function Website() {
                                         <path d="M7.9 7v2.4H12c-.2 1-1.2 3-4 3-2.4 0-4.3-2-4.3-4.4 0-2.4 2-4.4 4.3-4.4 1.4 0 2.3.6 2.8 1.1l1.9-1.8C11.5 1.7 9.9 1 8 1 4.1 1 1 4.1 1 8s3.1 7 7 7c4 0 6.7-2.8 6.7-6.8 0-.5 0-.8-.1-1.2H7.9z" fill="#0270D7"/>
                                     </svg>
                                 </a>
-                            </li>
-                        </ul>
-                        <div className="footer-copyright">&copy; 2019 Solid, all rights reserved</div>
+                            </li>*/}
+                        </ul> 
+                        <div className="footer-copyright">&copy; 2024 Startingames origins</div>
                     </div>
                 </div>
             </footer>
