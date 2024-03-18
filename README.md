@@ -1,8 +1,10 @@
-# React + Vite
+# FRVtubers
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Official website of FRVtubers, a discord community that aims to promote french virtual creators.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 👨‍🚀 Contributors
+[TakuDev](https://github.com/takudev)
+
+## 📄 License
+CC BY-ND 4.0 DEED © 2023-Present [TakuDev](https://github.com/takudev)
