@@ -101,10 +101,10 @@ h6,
 }
 
 .text-light {
-	color: color(typography, 2i);
+	color: color(typography, 2);
 
 	a {
-		color: color(typography, 2i);
+		color: color(typography, 2);
 	}
 }
 
@@ -112,7 +112,7 @@ h6,
 
 	h1, h2, h3, h4, h5, h6,
 	.h1, .h2, .h3, .h4, .h5, .h6 {
-		color: color(typography, 1i) !important;
+		color: color(typography, 1) !important;
 	}
 }
 

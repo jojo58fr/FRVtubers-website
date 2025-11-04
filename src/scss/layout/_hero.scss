@@ -43,7 +43,7 @@
 		left: -1.3%;
 		width: 152.84%;
 		height: 178.78%;
-		background-image: url('../images/hero-back-illustration.svg');
+		background-image: url('/hero-back-illustration.svg');
 	}
 
 	&::after {
@@ -51,7 +51,7 @@
 		left: 99.6%;
 		width: 57.2%;
 		height: 87.88%;
-		background-image: url('../images/hero-top-illustration.svg');
+		background-image: url('/hero-top-illustration.svg');
 	}
 }
 
@@ -140,16 +140,16 @@
 .hero-figure-box-07 {
 	background-color: color(bg, 3);
 	box-shadow: -20px 32px 64px rgba(#000, .25);
-	
+
 }
 
 .hero-figure-box-05 {
 
-	background: url("./LunahyuTakuDevGal.png");
+	background: url("/LunahyuTakuDevGal.png");
 	background-size: cover;
 	//background-position-x: 295px;
 
-	left: 17.4%;
+	left: -10.6%;
 	top: 13.3%;
 	width: 64%;
 	height: 73.7%;
@@ -158,7 +158,7 @@
 
 .hero-figure-box-06 {
 
-	background: url("./anime-wallpaper.jpg");
+	background: url("/anime-wallpaper.jpg");
 	background-size: auto;
 
 	left: 65.5%;
