@@ -22,7 +22,7 @@
     white-space: nowrap;
 
 	&:hover {
-		background: lighten(color(bg, 3), 1%);
+		background: #323845;
 	}
 
     &:active {
@@ -44,8 +44,8 @@
     background: linear-gradient(65deg, color(primary, 1) 0, color(primary, 2) 100%);
 
     &:hover {
-		background: lighten(mix(color(primary, 1), color(primary, 2)), 2%);
-        background: linear-gradient(65deg, lighten(color(primary, 1), 2%) 0, lighten(color(primary, 2), 2%) 100%);
+		background: #0a94ff;
+        background: linear-gradient(65deg, #0a94ff 0, #1aa3ff 100%);
     }
 }
 
