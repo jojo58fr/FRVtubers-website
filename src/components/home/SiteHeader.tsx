@@ -1,10 +1,12 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDiscord } from '@fortawesome/free-brands-svg-icons'
+import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
 import ThemeToggle from '../ThemeToggle'
 import styles from './SiteHeader.module.scss'
 
@@ -22,19 +24,53 @@ type SiteHeaderProps = {
 const SiteHeader = ({ navItems }: SiteHeaderProps) => {
   const { data: session } = useSession()
   const hasVtuberRole = session?.hasVtuberRole ?? false
+  const isAuthenticated = Boolean(session)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const overflowRef = useRef<string>('')
+
+  useEffect(() => {
+    if (!overflowRef.current) {
+      overflowRef.current = document.documentElement.style.overflow || ''
+    }
+
+    if (menuOpen) {
+      document.documentElement.style.overflow = 'hidden'
+    } else {
+      document.documentElement.style.overflow = overflowRef.current
+    }
+
+    return () => {
+      document.documentElement.style.overflow = overflowRef.current
+    }
+  }, [menuOpen])
+
+  const closeMenu = () => setMenuOpen(false)
+  const toggleMenu = () => setMenuOpen((prev) => !prev)
+
+  const handleSignIn = () => {
+    closeMenu()
+    void signIn('discord', { callbackUrl: '/' })
+  }
+
+  const handleSignOut = () => {
+    closeMenu()
+    void signOut({ callbackUrl: '/' })
+  }
 
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
         <div className={styles.branding}>
-          <Link href={"/"}><Image
-            src={FRVtubersLogo}
-            alt="FRVtubers"
-            width={160}
-            height={64}
-            priority
-            className={styles.logo}
-          /></Link>
+          <Link href="/" aria-label="FRVtubers - retour à l'accueil">
+            <Image
+              src={FRVtubersLogo}
+              alt="FRVtubers"
+              width={160}
+              height={64}
+              priority
+              className={styles.logo}
+            />
+          </Link>
         </div>
 
         <nav className={styles.navigation}>
@@ -45,12 +81,22 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
           ))}
         </nav>
 
+        <button
+          type="button"
+          className={styles.menuToggle}
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+          onClick={toggleMenu}
+        >
+          <FontAwesomeIcon icon={faBars} />
+        </button>
+
         <div className={styles.actions}>
           <ThemeToggle />
-          {session ? (
+          {isAuthenticated ? (
             <div className={styles.sessionBox}>
               <div className={styles.sessionAvatar}>
-                {session.user?.image ? (
+                {session?.user?.image ? (
                   <Image
                     src={session.user.image}
                     alt={session.user?.name ?? 'Avatar utilisateur'}
@@ -59,7 +105,7 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
                     className={styles.sessionAvatarImage}
                   />
                 ) : (
-                  <span>{(session.user?.name ?? session.user?.email ?? 'M')[0]?.toUpperCase()}</span>
+                  <span>{(session?.user?.name ?? session?.user?.email ?? 'M')[0]?.toUpperCase()}</span>
                 )}
               </div>
               {!hasVtuberRole && (
@@ -67,32 +113,79 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
                   Demander le rôle VtuberFR
                 </Link>
               )}
-              <button
-                type="button"
-                className={styles.sessionButton}
-                onClick={() => signOut({ callbackUrl: '/' })}
-              >
+              <button type="button" className={styles.sessionButton} onClick={handleSignOut}>
                 Se déconnecter
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              className={styles.sessionSignin}
-              onClick={() => signIn('discord', { callbackUrl: '/' })}
-            >
+            <button type="button" className={styles.sessionSignin} onClick={handleSignIn}>
               Se connecter
             </button>
           )}
-          {!session && (<a
+          {!isAuthenticated && (
+            <a
+              href="https://discord.gg/meyHQYWvjU"
+              target="_blank"
+              rel="noreferrer"
+              className={styles.joinButton}
+            >
+              <FontAwesomeIcon icon={faDiscord} />
+              Rejoindre
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div className={`${styles.mobileMenu} ${menuOpen ? styles.mobileMenuOpen : ''}`}>
+        <div className={styles.mobileHeader}>
+          <button
+            type="button"
+            className={styles.mobileClose}
+            onClick={closeMenu}
+            aria-label="Fermer le menu"
+          >
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
+        </div>
+
+        <nav className={styles.mobileNav}>
+          {navItems.map((item) => (
+            <a key={item.href} href={item.href} onClick={closeMenu}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className={styles.mobileActions}>
+          
+
+          {isAuthenticated ? (
+            <>
+              {!hasVtuberRole && (
+                <Link href="/onboarding" className={styles.mobileLinkButton} onClick={closeMenu}>
+                  Demander le rôle VtuberFR
+                </Link>
+              )}
+              <button type="button" onClick={handleSignOut}>
+                Se déconnecter
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={handleSignIn}>
+              Se connecter
+            </button>
+          )}
+
+          <a
             href="https://discord.gg/meyHQYWvjU"
             target="_blank"
             rel="noreferrer"
-            className={styles.joinButton}
+            className={styles.mobileJoin}
+            onClick={closeMenu}
           >
             <FontAwesomeIcon icon={faDiscord} />
-            Rejoindre
-          </a>)}
+            Rejoindre le serveur
+          </a>
         </div>
       </div>
     </header>
