@@ -1,0 +1,29 @@
+.footer {
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface);
+  color: var(--text-secondary);
+  padding: 24px 0 48px;
+  margin-top: clamp(64px, 12vw, 120px);
+}
+
+.inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.brand {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+}

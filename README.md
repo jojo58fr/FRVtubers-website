@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FRVtubers Website
 
-## Getting Started
+Site vitrine Next.js pour la communauté FRVtubers. Le projet utilise l’App Router, NextAuth pour l’authentification et Sass pour le style.
 
-First, run the development server:
+## Prérequis
+
+- Node.js 20+
+- npm (ou pnpm / yarn / bun)
+- Un compte Discord pour créer une application OAuth2
+
+## Configuration
+
+1. Copiez le fichier d’exemple d’environnement :
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. Créez une application sur le [Portail développeur Discord](https://discord.com/developers/applications) :
+
+   - Onglet **OAuth2 → General** :
+     - Ajoutez un **Redirect URL** `http://localhost:3000/api/auth/callback/discord` pour le développement local.
+     - Copiez le `CLIENT ID` et le `CLIENT SECRET` puis complétez `.env.local`.
+   - Onglet **OAuth2 → URL Generator** :
+     - Cochez les scopes `identify`, `email`, `guilds` et `guilds.members.read`.
+
+3. Activez le **Server Widget** dans les paramètres de votre serveur Discord (Paramètres du serveur → *Widget* → activer). Copiez l’identifiant du serveur (mode développeur → clic droit → *Copier l’identifiant*) et renseignez :
+
+   - `DISCORD_GUILD_ID` pour la récupération des membres en ligne.
+   - `DISCORD_VTUBER_ROLE_ID` avec l’identifiant du rôle accordé aux VTubers.
+   - `DISCORD_APPLICATION_WEBHOOK_URL` avec le webhook du canal où seront envoyées les candidatures.
+
+4. Facultatif : ajustez `NEXT_PUBLIC_DISCORD_INVITE` si vous utilisez une autre invitation que celle fournie par défaut.
+
+5. Générez un secret pour NextAuth :
+
+   ```bash
+   npx auth secret
+   ```
+
+   Collez la valeur dans `NEXTAUTH_SECRET`. Vérifiez que `NEXTAUTH_URL` pointe vers l’URL de votre environnement (par défaut `http://localhost:3000`).
+
+## Développement
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Rendez-vous sur [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Authentification Discord
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Le bouton **Se connecter** dans l’en-tête lance le flux OAuth2 Discord.
+- La page `/login` permet également l’authentification (Discord ou démo locale `user@example.com` / `password`).
+- Après connexion, les rôles Discord de l’utilisateur sont récupérés (scope `guilds.members.read`) et exposés dans la session NextAuth.
 
-## Learn More
+## Onboarding VTuber
 
-To learn more about Next.js, take a look at the following resources:
+- La page `/onboarding` guide les nouveaux membres :
+  1. Lien d’invitation vers le Discord FRVTubers.
+  2. Formulaire de candidature, envoyé via le webhook configuré.
+  3. Statut dynamique indiquant si le rôle VTuber est accordé ou en attente.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Assurez-vous que toutes les variables d’environnement sont présentes avant de lancer l’application ; NextAuth et le webhook refuseront de fonctionner si certaines valeurs manquent.
