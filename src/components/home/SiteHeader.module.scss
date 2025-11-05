@@ -83,8 +83,32 @@
   width: 100%;
 }
 
+.menuToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+
+  &:hover {
+    background: var(--surface-muted);
+    transform: translateY(-1px);
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
 .actions {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 12px;
 }
@@ -199,6 +223,144 @@
   background: var(--accent-strong);
 }
 
+.mobileMenu {
+  
+  position: fixed;
+  inset: 0;
+  top: 0;
+  padding: clamp(24px, 7vw, 48px);
+  padding-top: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  background: rgba(4, 7, 16, 0.99);
+  color: #f8fafc;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  z-index: 39;
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.mobileMenuOpen {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.mobileClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface) 80%, rgba(15, 23, 42, 0.4));
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.25s ease;
+
+  &:hover {
+    background: rgba(30, 41, 59, 0.65);
+  }
+}
+
+.mobileNav {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 18px;
+  font-weight: 600;
+
+  a {
+    padding-bottom: 4px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-soft) 65%, transparent);
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+.mobileActions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  button {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--accent);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.25s ease;
+
+    &:hover {
+      background: var(--accent-strong);
+    }
+  }
+}
+
+.mobileLinkButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+
+  &:hover {
+    color: var(--accent-strong);
+    background: color-mix(in srgb, var(--accent-soft) 65%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  }
+}
+
+.mobileJoin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--surface) 70%, rgba(15, 23, 42, 0.4));
+  border: 1px solid color-mix(in srgb, var(--border-soft) 75%, transparent);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--border-strong) 75%, transparent);
+  }
+}
+
 @media (min-width: 640px) {
   .navigation {
     display: flex;
@@ -215,6 +377,10 @@
 }
 
 @media (min-width: 768px) {
+  .actions {
+    display: inline-flex;
+  }
+
   .sessionBox {
     display: inline-flex;
   }

@@ -50,12 +50,12 @@ async function fetchDiscordPresenceCount(): Promise<number | null> {
 }
 
 const navItems: NavItem[] = [
-  
+
 ]
 
 const buildStats = (memberCount: number | null) => {
   const formatted = memberCount?.toLocaleString('fr-FR')
-  const value = formatted ?? '950+'
+  const value = '950+';
 
   return [
     {
