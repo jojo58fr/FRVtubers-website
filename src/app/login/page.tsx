@@ -46,7 +46,7 @@ export default function LoginPage() {
         </div>
         <div className="space-y-6">
           <button
-            onClick={() => signIn('discord')}
+            onClick={() => signIn('discord', { callbackUrl: '/' })}
             className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#5865F2] hover:bg-[#4752C4] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5865F2] transition duration-200"
           >
             <FontAwesomeIcon icon={faDiscord} className="mr-2" />

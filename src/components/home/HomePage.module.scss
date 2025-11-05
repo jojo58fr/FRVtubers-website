@@ -1,0 +1,30 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1200px, 120vw);
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(circle at top, var(--glow), transparent 70%);
+  opacity: 0.6;
+  z-index: -1;
+}
+
+.content {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(48px, 10vw, 96px);
+}

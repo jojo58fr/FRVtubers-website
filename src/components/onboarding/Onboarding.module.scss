@@ -1,0 +1,216 @@
+.wrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(24px, 6vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+
+  h1 {
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    background: linear-gradient(120deg, var(--accent), var(--gradient-start));
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  h2 {
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    &::before {
+      content: '';
+      display: inline-flex;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+  }
+}
+
+.step {
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  background: var(--surface);
+  padding: clamp(24px, 5vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.primaryAction {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 999px;
+  padding: 14px 28px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    background: var(--accent-strong);
+  }
+}
+
+.instruction {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.criteria {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.note {
+  font-size: 14px;
+  color: var(--text-tertiary);
+
+  strong {
+    color: var(--text-secondary);
+  }
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+
+  label {
+    display: grid;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  input,
+  textarea {
+    font: inherit;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-soft);
+    background: var(--surface-muted);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 96px;
+  }
+
+  button {
+    justify-self: flex-start;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 24px;
+    font-weight: 600;
+    background: var(--accent);
+    color: #ffffff;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background: var(--accent-strong);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.feedbackSuccess {
+  color: #15803d;
+  font-size: 14px;
+}
+
+.feedbackError {
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.membershipAlert {
+  font-size: 14px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--accent-soft) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 16px;
+  padding: 16px 18px;
+
+  code {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+        monospace);
+    background: color-mix(in srgb, var(--surface-muted) 60%, transparent);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+}
+
+.statusApproved,
+.statusPending {
+  border-radius: 18px;
+  padding: 14px 18px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.statusApproved {
+  background: rgba(34, 197, 94, 0.16);
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  color: #15803d;
+}
+
+.statusPending {
+  background: rgba(251, 191, 36, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #b45309;
+}
+
+.statusHelp {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  max-width: 560px;
+}
+
+@media (max-width: 640px) {
+  .wrapper {
+    gap: 36px;
+  }
+
+  .step {
+    padding: 20px;
+  }
+}
