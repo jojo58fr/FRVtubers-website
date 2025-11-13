@@ -8,6 +8,7 @@ Site vitrine open-source de la communauté FRVtubers, construit avec Next.js 16 
 - **Authentification Discord** : NextAuth avec scopes `identify`, `email`, `guilds`, `guilds.members.read`, récupération automatique des rôles.
 - **Onboarding VTuber** : formulaire envoyé via webhook, statut temps réel du rôle (attente/validé).
 - **Menu responsive** : header accessible, thème clair/sombre, burger menu animé.
+- **Vitrine Kokori** : galerie vidéo des modèles disponibles avec une carte communautaire invitant à proposer votre propre avatar sous licence Creative Commons.
 - **Stack moderne** : Next.js 16, React 19, Sass modules, FontAwesome, App Router.
 
 ## 🧱 Architecture

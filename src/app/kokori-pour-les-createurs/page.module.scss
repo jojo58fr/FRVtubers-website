@@ -1,0 +1,469 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.35s ease, color 0.35s ease;
+
+  --kokori-surface: rgba(249, 246, 255, 0.92);
+  --kokori-surface-strong: rgba(255, 255, 255, 0.98);
+  --kokori-surface-muted: rgba(122, 98, 255, 0.12);
+  --kokori-border: rgba(99, 102, 241, 0.18);
+  --kokori-border-strong: rgba(99, 102, 241, 0.32);
+  --kokori-accent: #4f46e5;
+  --kokori-accent-soft: rgba(79, 70, 229, 0.18);
+  --kokori-text-soft: #4a3f87;
+  --kokori-shadow-soft: 0 28px 60px -40px rgba(79, 70, 229, 0.18);
+  --kokori-shadow-strong: 0 30px 66px -34px rgba(79, 70, 229, 0.28);
+  --kokori-hero-shadow: 0 32px 80px rgba(79, 70, 229, 0.25);
+  --kokori-button-shadow: 0 18px 36px -28px rgba(79, 70, 229, 0.2);
+  --kokori-button-shadow-strong: 0 20px 42px -30px rgba(79, 70, 229, 0.26);
+  --kokori-cta-gradient: linear-gradient(145deg, rgba(79, 70, 229, 0.16), rgba(55, 48, 163, 0.24));
+}
+
+:global(.dark) .page {
+  
+  --kokori-surface: rgba(22, 18, 48, 0.7);
+  --kokori-surface-strong: rgba(33, 26, 74, 0.85);
+  --kokori-surface-muted: rgba(22, 18, 48, 0.5);
+  --kokori-border: rgba(146, 126, 255, 0.32);
+  --kokori-border-strong: rgba(146, 126, 255, 0.45);
+  --kokori-accent: rgba(217, 205, 255, 0.95);
+  --kokori-accent-soft: rgba(146, 126, 255, 0.32);
+  --kokori-text-soft: rgba(217, 205, 255, 0.78);
+  --kokori-shadow-soft: 0 24px 60px -48px rgba(45, 34, 105, 0.6);
+  --kokori-shadow-strong: 0 24px 60px -44px rgba(62, 44, 130, 0.65);
+  --kokori-hero-shadow: 0 32px 80px rgba(40, 20, 90, 0.55);
+  --kokori-button-shadow: 0 18px 36px -28px rgba(217, 205, 255, 0.35);
+  --kokori-button-shadow-strong: 0 18px 36px -28px rgba(217, 205, 255, 0.6);
+  --kokori-cta-gradient: linear-gradient(145deg, rgba(92, 72, 190, 0.45), rgba(37, 24, 95, 0.85));
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  top: -220px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1440px, 140vw);
+  height: 720px;
+  border-radius: 50%;
+  background: radial-gradient(circle at top, var(--glow), transparent 70%);
+  opacity: 0.5;
+  z-index: -1;
+}
+
+.content {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(120px, 18vw, 160px) clamp(20px, 4vw, 32px) clamp(120px, 18vw, 180px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(48px, 7vw, 64px);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 3vw, 26px);
+  width: 100%;
+  align-items: stretch;
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 3vw, 26px);
+  max-width: min(720px, 100%);
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--kokori-accent-soft);
+  border: 1px solid var(--kokori-border);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  width: fit-content;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.heroBadge svg {
+  width: 18px;
+  height: 18px;
+  color: var(--kokori-accent);
+}
+
+.heroTitle {
+  font-size: clamp(2.5rem, 6.5vw, 3.6rem);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.08;
+}
+
+.heroSubtitle {
+  font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.8;
+}
+
+.heroVisual {
+  display: none;
+  position: relative;
+  width: min(360px, 100%);
+  margin: 0 auto;
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(var(--kokori-hero-shadow));
+}
+
+.heroLink {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--kokori-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  transition: color 180ms ease, text-decoration-color 180ms ease;
+}
+
+.heroLink:hover,
+.heroLink:focus-visible {
+  color: var(--kokori-accent);
+}
+
+.section {
+  background: var(--kokori-surface);
+  border-radius: 28px;
+  border: 1px solid var(--kokori-border);
+  padding: clamp(28px, 5vw, 36px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 4vw, 28px);
+  box-shadow: var(--kokori-shadow-soft);
+  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.sectionHeader {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  line-height: 1.2;
+}
+
+.sectionHeader p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.sectionIcon {
+  width: 36px;
+  height: 36px;
+  color: var(--kokori-accent);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(16px, 4vw, 20px);
+}
+
+.list li {
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: var(--kokori-surface-strong);
+  border: 1px solid var(--kokori-border);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.contactNote,
+.creditNote {
+  margin: 0;
+  color: var(--kokori-text-soft);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.contactNote a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--kokori-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.contactNote a:hover,
+.contactNote a:focus-visible {
+  color: var(--kokori-accent);
+}
+
+.showcase {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 5vw, 36px);
+}
+
+.videoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(18px, 4vw, 24px);
+
+  margin: auto;
+}
+
+
+
+.videoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(20px, 4vw, 26px);
+  border-radius: 24px;
+  background: var(--kokori-surface);
+  border: 1px solid var(--kokori-border);
+  box-shadow: var(--kokori-shadow-soft);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background-color 0.25s ease;
+  transform: translateY(0);
+  overflow: hidden;
+
+  &:last-child {
+    border-style: dotted;
+    border-width: 5px;
+  }
+}
+
+.videoCardStandalone {
+  align-self: center;
+  max-width: 420px;
+  text-align: center;
+}
+
+.videoCardStandalone .videoCaption {
+  align-items: center;
+}
+
+.videoCard:hover,
+.videoCard:focus-within {
+  border-color: var(--kokori-border-strong);
+  box-shadow: var(--kokori-shadow-strong);
+  transform: translateY(-4px);
+}
+
+.videoPlayer {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #000;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.videoCaption {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  flex-grow: 1;
+}
+
+.videoCaption h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.4;
+}
+
+.videoCaption p {
+  margin: 0;
+  color: var(--kokori-text-soft);
+  line-height: 1.6;
+}
+
+.downloads {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 5vw, 40px);
+}
+
+.downloadGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(18px, 4vw, 24px);
+}
+
+.downloadCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(24px, 5vw, 30px);
+  border-radius: 24px;
+  background: var(--kokori-surface);
+  border: 1px solid var(--kokori-border);
+  box-shadow: var(--kokori-shadow-soft);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background-color 0.25s ease;
+  transform: translateY(0);
+}
+
+.downloadCard:hover,
+.downloadCard:focus-within {
+  border-color: var(--kokori-border-strong);
+  box-shadow: var(--kokori-shadow-strong);
+  transform: translateY(-4px);
+}
+
+.downloadCard h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.3;
+}
+
+.downloadCard p {
+  margin: 0;
+  color: var(--kokori-text-soft);
+  line-height: 1.6;
+}
+
+.downloadButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--kokori-cta-gradient);
+  border: 1px solid var(--kokori-border-strong);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  width: fit-content;
+  box-shadow: var(--kokori-button-shadow);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+
+  margin-top: auto;
+}
+
+.downloadButton:hover,
+.downloadButton:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--kokori-button-shadow-strong);
+  border-color: var(--kokori-border-strong);
+  outline: none;
+}
+
+.help {
+  margin-top: clamp(12px, 3vw, 16px);
+  padding: clamp(28px, 5vw, 36px);
+  border-radius: 28px;
+  border: 1px dashed var(--kokori-border);
+  background: var(--kokori-surface-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: center;
+}
+
+.help h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+}
+
+.help p {
+  margin: 0;
+  color: var(--kokori-text-soft);
+  line-height: 1.7;
+}
+
+.discordButton {
+  display: inline-flex;
+  align-self: center;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  color: var(--text-primary);
+  background: var(--accent-soft);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.discordButton:hover,
+.discordButton:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--accent-strong);
+}
+
+@media (min-width: 768px) {
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+    align-items: center;
+    gap: clamp(32px, 6vw, 48px);
+  }
+
+  .heroVisual {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  }
+
+  .heroVisual {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .sectionHeader {
+    flex-direction: column;
+  }
+
+  .sectionIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .heroBadge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .downloadButton,
+  .discordButton {
+    width: 100%;
+  }
+}
