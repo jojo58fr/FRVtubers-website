@@ -5,6 +5,7 @@ import ResourcesSection from '../components/home/ResourcesSection'
 import EventsSection from '../components/home/EventsSection'
 import TeamSection from '../components/home/TeamSection'
 import FinalCtaSection from '../components/home/FinalCtaSection'
+import OpenCollectiveSection from '../components/home/OpenCollectiveSection'
 import SiteFooter from '../components/home/SiteFooter'
 import BackToTopButton from '../components/BackToTopButton'
 import styles from '../components/home/HomePage.module.scss'
@@ -50,7 +51,9 @@ async function fetchDiscordPresenceCount(): Promise<number | null> {
 }
 
 const navItems: NavItem[] = [
-
+  { label: 'Kokori Mag', href: '/kokori-mag' },
+  { label: 'Faire un don', href: '/dons' }, 
+  { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
 ]
 
 const buildStats = (memberCount: number | null) => {
@@ -167,6 +170,7 @@ const HomePage = async () => {
       <main className={styles.content}>
         <HeroSection stats={stats} streamUrl={streamUrl} twitchEmbedUrl={twitchEmbedUrl} />
         <CommunitySection pillars={communityPillars} />
+        <OpenCollectiveSection />
         {/* <ResourcesSection resourceCards={resourceCards} />
         <EventsSection events={scheduleEvents} />
         <TeamSection members={teamMembers} /> */}
@@ -179,3 +183,4 @@ const HomePage = async () => {
 }
 
 export default HomePage
+

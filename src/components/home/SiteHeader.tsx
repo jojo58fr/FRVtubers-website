@@ -5,12 +5,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
 import ThemeToggle from '../ThemeToggle'
 import styles from './SiteHeader.module.scss'
 
 import FRVtubersLogo from '../../assets/FRVtubers_logo_without_subtitle.png'
+import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 
 export type NavItem = {
   label: string
@@ -57,11 +57,19 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
     void signOut({ callbackUrl: '/' })
   }
 
+  const profileInitial =
+    (session?.user?.name ?? session?.user?.email ?? 'P')
+      .trim()
+      .charAt(0)
+      .toUpperCase() || 'P'
+  const profileImage = session?.user?.image ?? null
+  const profileAlt = session?.user?.name ?? session?.user?.email ?? 'Avatar utilisateur'
+
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
         <div className={styles.branding}>
-          <Link href="/" aria-label="FRVtubers - retour à l'accueil">
+          <Link href="/" aria-label="FRVtubers - retour a l'accueil">
             <Image
               src={FRVtubersLogo}
               alt="FRVtubers"
@@ -94,44 +102,49 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
         <div className={styles.actions}>
           <ThemeToggle />
           {isAuthenticated ? (
-            <div className={styles.sessionBox}>
-              <div className={styles.sessionAvatar}>
-                {session?.user?.image ? (
-                  <Image
-                    src={session.user.image}
-                    alt={session.user?.name ?? 'Avatar utilisateur'}
-                    width={40}
-                    height={40}
-                    className={styles.sessionAvatarImage}
-                  />
-                ) : (
-                  <span>{(session?.user?.name ?? session?.user?.email ?? 'M')[0]?.toUpperCase()}</span>
+            <>
+              <div className={styles.sessionBox}>
+                {!hasVtuberRole && (
+                  <Link href="/onboarding" className={styles.requestRoleButton}>
+                    Demander le role VtuberFR
+                  </Link>
                 )}
-              </div>
-              {!hasVtuberRole && (
-                <Link href="/onboarding" className={styles.requestRoleButton}>
-                  Demander le rôle VtuberFR
+                <Link href="/profile" className={styles.profilButton} aria-label="Acceder a mon profil">
+                  <span className={styles.joinButtonAvatar}>
+                    {profileImage ? (
+                      <Image
+                        src={profileImage}
+                        alt={profileAlt}
+                        width={28}
+                        height={28}
+                        className={styles.joinButtonAvatarImage}
+                      />
+                    ) : (
+                      <span className={styles.joinButtonInitial}>{profileInitial}</span>
+                    )}
+                  </span>
+                  <span>Mon profil</span>
                 </Link>
-              )}
-              <button type="button" className={styles.sessionButton} onClick={handleSignOut}>
-                Se déconnecter
-              </button>
-            </div>
+                <button type="button" className={styles.sessionButton} onClick={handleSignOut}>
+                  Se deconnecter
+                </button>
+              </div>
+            </>
           ) : (
-            <button type="button" className={styles.sessionSignin} onClick={handleSignIn}>
-              Se connecter
-            </button>
-          )}
-          {!isAuthenticated && (
-            <a
-              href="https://discord.gg/meyHQYWvjU"
-              target="_blank"
-              rel="noreferrer"
-              className={styles.joinButton}
-            >
-              <FontAwesomeIcon icon={faDiscord} />
-              Rejoindre
-            </a>
+            <div className={styles.authButtons}>
+              <button type="button" className={styles.sessionSignin} onClick={handleSignIn}>
+                Se connecter
+              </button>
+              <a
+                href="https://discord.gg/meyHQYWvjU"
+                target="_blank"
+                rel="noreferrer"
+                className={styles.joinButton}
+              >
+                <FontAwesomeIcon icon={faDiscord} />
+                Rejoindre
+              </a>
+            </div>
           )}
         </div>
       </div>
@@ -157,35 +170,48 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
         </nav>
 
         <div className={styles.mobileActions}>
-          
-
           {isAuthenticated ? (
             <>
               {!hasVtuberRole && (
                 <Link href="/onboarding" className={styles.mobileLinkButton} onClick={closeMenu}>
-                  Demander le rôle VtuberFR
+                  Demander le role VtuberFR
                 </Link>
               )}
               <button type="button" onClick={handleSignOut}>
-                Se déconnecter
+                Se deconnecter
               </button>
+              <Link href="/profile" className={styles.mobileJoin} onClick={closeMenu} aria-label="Voir mon profil">
+                {profileImage ? (
+                  <Image
+                    src={profileImage}
+                    alt={profileAlt}
+                    width={36}
+                    height={36}
+                    className={styles.mobileJoinImage}
+                  />
+                ) : (
+                  <span className={styles.mobileJoinInitial}>{profileInitial}</span>
+                )}
+                <span>Voir mon profil</span>
+              </Link>
             </>
           ) : (
-            <button type="button" onClick={handleSignIn}>
-              Se connecter
-            </button>
+            <>
+              <button type="button" onClick={handleSignIn}>
+                Se connecter
+              </button>
+              <a
+                href="https://discord.gg/meyHQYWvjU"
+                target="_blank"
+                rel="noreferrer"
+                className={styles.mobileJoin}
+                onClick={closeMenu}
+              >
+                <FontAwesomeIcon icon={faDiscord} />
+                Rejoindre le serveur
+              </a>
+            </>
           )}
-
-          <a
-            href="https://discord.gg/meyHQYWvjU"
-            target="_blank"
-            rel="noreferrer"
-            className={styles.mobileJoin}
-            onClick={closeMenu}
-          >
-            <FontAwesomeIcon icon={faDiscord} />
-            Rejoindre le serveur
-          </a>
         </div>
       </div>
     </header>

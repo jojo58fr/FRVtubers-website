@@ -1,0 +1,57 @@
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 72px) clamp(24px, 5vw, 48px) clamp(96px, 7vw, 140px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 6vw, 48px);
+  color: var(--text-primary);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 3vw, 24px);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.2rem, 4.5vw, 2.8rem);
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 680px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.hint {
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(35, 30, 68, 0.75);
+  border: 1px solid rgba(142, 122, 255, 0.3);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.hint code {
+  font-family: var(--font-mono, 'Fira Code', 'SFMono-Regular', ui-monospace, monospace);
+  background: rgba(17, 13, 38, 0.8);
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: var(--text-primary);
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding-bottom: clamp(72px, 12vw, 96px);
+  }
+
+  .hint {
+    font-size: 0.9rem;
+  }
+}
+

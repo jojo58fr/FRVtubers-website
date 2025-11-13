@@ -1,0 +1,288 @@
+.manager {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 3vw, 28px);
+  background: rgba(21, 18, 42, 0.65);
+  border: 1px solid rgba(142, 122, 255, 0.25);
+  border-radius: 24px;
+  padding: clamp(20px, 4vw, 32px);
+  box-shadow: 0 24px 60px -48px rgba(40, 24, 92, 0.65);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-end;
+}
+
+.searchBox,
+.filterBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: min(280px, 100%);
+  flex: 1;
+}
+
+.searchBox label,
+.filterBox label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(214, 205, 255, 0.72);
+}
+
+.searchInput,
+.roleSelect {
+  appearance: none;
+  border: 1px solid rgba(142, 122, 255, 0.35);
+  background: rgba(15, 12, 34, 0.9);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.searchInput:focus-visible,
+.roleSelect:focus-visible {
+  border-color: rgba(198, 176, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(142, 122, 255, 0.25);
+  outline: none;
+}
+
+.refreshButton {
+  align-self: flex-start;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(142, 122, 255, 0.4);
+  background: rgba(46, 38, 96, 0.85);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 160ms ease;
+}
+
+.refreshButton:hover:not(:disabled),
+.refreshButton:focus-visible:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -20px rgba(142, 122, 255, 0.9);
+  outline: none;
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.statusBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.feedback {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(64, 201, 156, 0.2);
+  border: 1px solid rgba(64, 201, 156, 0.45);
+  color: rgba(183, 240, 219, 0.9);
+}
+
+.error {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 98, 120, 0.18);
+  border: 1px solid rgba(255, 98, 120, 0.45);
+  color: rgba(255, 189, 198, 0.9);
+}
+
+.loading {
+  color: rgba(214, 205, 255, 0.75);
+}
+
+.roleHint {
+  color: rgba(214, 205, 255, 0.55);
+  font-size: 0.9rem;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(142, 122, 255, 0.25);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+  background: rgba(12, 10, 26, 0.9);
+}
+
+.table thead th {
+  text-align: left;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(214, 205, 255, 0.6);
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(142, 122, 255, 0.2);
+}
+
+.table tbody td {
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(142, 122, 255, 0.1);
+  vertical-align: top;
+}
+
+.table tbody tr[data-pending='true'] {
+  background: rgba(142, 122, 255, 0.08);
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.email {
+  font-size: 0.95rem;
+  color: rgba(214, 205, 255, 0.6);
+}
+
+.discord {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.95rem;
+}
+
+.discordId {
+  color: rgba(214, 205, 255, 0.8);
+}
+
+.discordStatusWarning,
+.discordStatusMuted {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  align-self: flex-start;
+}
+
+.discordStatusWarning {
+  background: rgba(255, 169, 93, 0.16);
+  border: 1px solid rgba(255, 169, 93, 0.4);
+  color: rgba(255, 214, 175, 0.9);
+}
+
+.discordStatusMuted {
+  background: rgba(214, 205, 255, 0.12);
+  border: 1px solid rgba(214, 205, 255, 0.35);
+  color: rgba(214, 205, 255, 0.7);
+}
+
+.roleCell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 220px;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.roleBadgeMember {
+  background: rgba(214, 205, 255, 0.12);
+  color: rgba(214, 205, 255, 0.75);
+  border: 1px solid rgba(214, 205, 255, 0.3);
+}
+
+.roleBadgeModerator {
+  background: rgba(98, 173, 255, 0.16);
+  color: rgba(158, 209, 255, 0.95);
+  border: 1px solid rgba(98, 173, 255, 0.4);
+}
+
+.roleBadgeComite {
+  background: rgba(151, 120, 255, 0.2);
+  color: rgba(222, 207, 255, 0.95);
+  border: 1px solid rgba(151, 120, 255, 0.5);
+}
+
+.roleSwitcher {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(142, 122, 255, 0.3);
+  background: rgba(18, 14, 42, 0.85);
+  color: var(--text-primary);
+  padding: 8px 10px;
+  font-size: 0.95rem;
+}
+
+.roleSwitcher:disabled {
+  opacity: 0.65;
+}
+
+.timestamps {
+  font-size: 0.9rem;
+  color: rgba(214, 205, 255, 0.6);
+}
+
+.statuses {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 24px;
+  font-size: 1rem;
+  color: rgba(214, 205, 255, 0.7);
+}
+
+@media (max-width: 960px) {
+  .table {
+    min-width: 640px;
+  }
+}
+
+@media (max-width: 720px) {
+  .manager {
+    padding: clamp(18px, 5vw, 26px);
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchBox,
+  .filterBox {
+    min-width: 100%;
+  }
+
+  .refreshButton {
+    width: 100%;
+  }
+}
+

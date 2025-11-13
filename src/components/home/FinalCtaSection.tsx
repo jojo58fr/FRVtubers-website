@@ -12,7 +12,7 @@ const FinalCtaSection = () => {
       <h2 className={styles.title}>Prêt à rejoindre l&apos;aventure FRVtubers ?</h2>
       <div className={styles.actions}>
         <a
-          href="https://www.patreon.com/c/TakuDev"
+          href="https://opencollective.com/frvtubers"
           target="_blank"
           rel="noreferrer"
           className={styles.support}

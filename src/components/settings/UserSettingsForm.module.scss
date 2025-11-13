@@ -1,0 +1,98 @@
+.settingsForm {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 10px 30px -20px rgba(0, 0, 0, 0.35);
+}
+
+.group {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.description {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.select {
+  width: 100%;
+  max-width: 320px;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-soft);
+  background: var(--background);
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.radioList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-soft);
+  background: var(--background);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.radioOption[data-active='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(127, 90, 240, 0.18);
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #7f5af0 0%, #6246ea 100%);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.button:not(:disabled):hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 15px 35px -20px rgba(127, 90, 240, 0.6);
+}
+
+.status {
+  font-size: 0.9rem;
+}
+
+.status[data-variant='success'] {
+  color: #2f9e44;
+}
+
+.status[data-variant='error'] {
+  color: #d9480f;
+}

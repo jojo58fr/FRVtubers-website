@@ -32,8 +32,27 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const themeInitScript = `
+(function() {
+  try {
+    var storageKey = 'theme';
+    var root = document.documentElement;
+    var stored = window.localStorage.getItem(storageKey);
+    var theme = stored === 'dark' || stored === 'light'
+      ? stored
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.classList.toggle('dark', theme === 'dark');
+    root.setAttribute('data-theme', theme);
+  } catch (error) {
+    console.warn('Unable to apply saved theme preference', error);
+  }
+})();`.replace('</script>', '<\\/script>')
+
   return (
     <html lang="fr">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>{children}</AuthProvider>
       </body>

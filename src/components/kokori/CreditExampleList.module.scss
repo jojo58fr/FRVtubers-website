@@ -1,0 +1,93 @@
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px;
+  border-radius: 20px;
+  background: var(--kokori-surface-strong, var(--surface-elevated));
+  border: 1px solid var(--kokori-border, var(--border-soft));
+  color: var(--text-secondary);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background-color 0.25s ease;
+  box-shadow: var(--kokori-shadow-soft, var(--shadow-soft));
+}
+
+.item:hover,
+.item:focus-within {
+  border-color: var(--kokori-border-strong, var(--border-strong));
+  box-shadow: var(--kokori-shadow-strong, var(--shadow-card));
+  transform: translateY(-2px);
+}
+
+.text {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-right: auto;
+}
+
+.text p {
+  margin: 0;
+}
+
+.quoteMark {
+  color: var(--kokori-accent, var(--accent-strong));
+  font-weight: 700;
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--kokori-border, var(--border-soft));
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: var(--kokori-button-shadow, var(--shadow-soft));
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.copyButton:hover,
+.copyButton:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--kokori-button-shadow-strong, var(--shadow-card));
+  border-color: var(--kokori-border-strong, var(--border-strong));
+  outline: none;
+}
+
+.copyButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 600px) {
+  .item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .text {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .copyButton {
+    width: 100%;
+    height: 44px;
+  }
+}

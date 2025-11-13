@@ -17,7 +17,11 @@ export const metadata = {
   description: 'Étapes pour rejoindre la communauté et candidater au rôle VTuber.',
 }
 
-const navItems: NavItem[] = [{ label: 'Accueil', href: '/' }]
+const navItems: NavItem[] = [
+  { label: 'Kokori Mag', href: '/kokori-mag' },
+  { label: 'Faire un don', href: '/dons' }, 
+  { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
+]
 
 const OnboardingPage = async () => {
   const session = await getServerSession(authOptions)

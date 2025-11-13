@@ -1,0 +1,177 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 4vw, 48px);
+}
+
+.sectionHeader {
+  max-width: min(680px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--text-primary);
+}
+
+.sectionHeader h2 {
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  font-weight: 700;
+  margin: 0;
+}
+
+.sectionHeader p {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(24px, 3vw, 32px);
+  padding: 0;
+  margin: 0;
+}
+
+.cardWrapper {
+  position: relative;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: linear-gradient(165deg, rgba(129, 104, 255, 0.08), rgba(31, 26, 89, 0.7));
+  border: 1px solid rgba(129, 104, 255, 0.3);
+  border-radius: 20px;
+  padding: clamp(20px, 3vw, 28px);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  min-height: 100%;
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-4px);
+  border-color: rgba(173, 152, 255, 0.8);
+  box-shadow: 0 18px 40px -24px rgba(55, 35, 120, 0.8);
+}
+
+.cover {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 240px;
+  background: rgba(22, 17, 56, 0.85);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.coverImage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.coverImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+  transition: transform 300ms ease;
+}
+
+.card:hover .coverImage img,
+.card:focus-visible .coverImage img {
+  transform: scale(1.05);
+}
+
+.coverOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(12, 10, 32, 0.45) 0%, rgba(6, 5, 18, 0.75) 100%),
+    radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.35), transparent 55%);
+  pointer-events: none;
+}
+
+.coverBadge,
+.coverIssue,
+.coverTitle {
+  position: relative;
+  padding: 0 16px;
+}
+
+.coverBadge {
+  display: inline-block;
+  margin-top: 18px;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.coverIssue {
+  font-size: clamp(2.5rem, 6vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.coverTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  opacity: 0.92;
+  margin-bottom: 18px;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--text-primary);
+}
+
+.meta h3 {
+  font-size: clamp(1.3rem, 2.4vw, 1.6rem);
+  margin: 0;
+}
+
+.date {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.description {
+  font-size: 0.95rem;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.cta {
+  margin-top: auto;
+  font-weight: 600;
+  color: var(--accent-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cta::after {
+  content: '>';
+  font-size: 1.1rem;
+  transition: transform 200ms ease;
+}
+
+.card:hover .cta::after,
+.card:focus-visible .cta::after {
+  transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+  .cover {
+    min-height: 200px;
+  }
+}

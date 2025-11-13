@@ -1,82 +1,42 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons'
-
-type Theme = 'light' | 'dark'
-
-const getPreferredTheme = (): Theme => {
-  if (typeof window === 'undefined') {
-    return 'light'
-  }
-
-  const storedTheme = window.localStorage.getItem('theme')
-  if (storedTheme === 'light' || storedTheme === 'dark') {
-    return storedTheme
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
-
-const applyTheme = (theme: Theme) => {
-  if (typeof document === 'undefined') {
-    return
-  }
-
-  document.documentElement.classList.toggle('dark', theme === 'dark')
-  document.documentElement.setAttribute('data-theme', theme)
-}
+import { useUserPreferences } from './providers/UserPreferencesProvider'
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(() => getPreferredTheme())
+  const { preferences, updateTheme, isUpdating } = useUserPreferences()
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    applyTheme(theme)
-  }, [theme])
+  const toggleTheme = async () => {
+    setError(null)
+    const nextTheme = preferences.theme === 'light' ? 'dark' : 'light'
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
+    try {
+      await updateTheme(nextTheme)
+    } catch (err) {
+      console.error(err)
+      setError('Sauvegarde échouée')
     }
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleSystemChange = (event: MediaQueryListEvent) => {
-      const stored = window.localStorage.getItem('theme')
-      if (stored === 'light' || stored === 'dark') {
-        return
-      }
-
-      const nextTheme: Theme = event.matches ? 'dark' : 'light'
-      setTheme(nextTheme)
-    }
-
-    mediaQuery.addEventListener('change', handleSystemChange)
-
-    return () => mediaQuery.removeEventListener('change', handleSystemChange)
-  }, [])
-
-  const toggleTheme = () => {
-    const nextTheme: Theme = theme === 'light' ? 'dark' : 'light'
-    setTheme(nextTheme)
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('theme', nextTheme)
-    }
-    applyTheme(nextTheme)
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      className="group relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-soft)] bg-[var(--surface)] text-[var(--text-primary)] shadow-sm transition-transform duration-300 hover:scale-105 hover:border-[var(--border-strong)] hover:shadow-md"
-      aria-label={theme === 'light' ? 'Activer le theme sombre' : 'Activer le theme clair'}
-    >
-      <span className="pointer-events-none absolute inset-0 rounded-full bg-[var(--accent-soft)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <FontAwesomeIcon
-        icon={theme === 'light' ? faMoon : faSun}
-        className="relative text-base"
-      />
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="group relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-soft)] bg-[var(--surface)] text-[var(--text-primary)] shadow-sm transition-transform duration-300 hover:scale-105 hover:border-[var(--border-strong)] hover:shadow-md disabled:opacity-60"
+        aria-label={preferences.theme === 'light' ? 'Activer le theme sombre' : 'Activer le theme clair'}
+        disabled={isUpdating}
+      >
+        <span className="pointer-events-none absolute inset-0 rounded-full bg-[var(--accent-soft)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <FontAwesomeIcon
+          icon={preferences.theme === 'light' ? faMoon : faSun}
+          className="relative text-base"
+        />
+      </button>
+      {error && <span className="sr-only">{error}</span>}
+    </>
   )
 }

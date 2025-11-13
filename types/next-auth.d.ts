@@ -1,4 +1,6 @@
+import { AdminRole } from '@prisma/client'
 import { DefaultSession } from 'next-auth'
+import { type UserPreferences } from '@/lib/user-preferences'
 
 declare module 'next-auth' {
   interface Session extends DefaultSession {
@@ -11,6 +13,8 @@ declare module 'next-auth' {
     }
     hasVtuberRole?: boolean
     isGuildMember?: boolean
+    preferences?: UserPreferences
+    adminRole?: AdminRole
   }
 }
 
@@ -25,5 +29,7 @@ declare module 'next-auth/jwt' {
     }
     discordMemberFetchedAt?: number
     discordIsMember?: boolean
+    userPreferences?: UserPreferences
+    adminRole?: AdminRole
   }
 }

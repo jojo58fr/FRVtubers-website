@@ -17,6 +17,12 @@ import styles from './page.module.scss'
 import KokoriGoodEnough from '../../assets/kokori_goodenough.png'
 import CreditExampleList from '../../components/kokori/CreditExampleList'
 
+type AssetDownload = {
+  title: string
+  description: string
+  file: string
+}
+
 const navItems: NavItem[] = [
   { label: 'Kokori Mag', href: '/kokori-mag' },
   { label: 'Faire un don', href: '/dons' }, 
@@ -51,7 +57,7 @@ const creditExamples = [
   'Modèle Kokori par FRVtubers (CC BY-NC 4.0).',
   'Assets Kokori, proposé par FRVtubers sous licence Creative Commons Attribution - Pas d’Utilisation Commerciale 4.0.',
 ]
-const assetDownloads = [
+const assetDownloads: AssetDownload[] = [
   /*{
     title: 'Modèle Live2D par Cookie Wolie',
     description:
