@@ -54,6 +54,21 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navItemHasChildren {
+  padding-block: 8px;
 }
 
 .navLink {
@@ -61,6 +76,12 @@
   padding-bottom: 4px;
   color: inherit;
   transition: color 0.25s ease;
+}
+
+.navLinkHasChildren {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .navLink::after {
@@ -81,6 +102,56 @@
 
 .navLink:hover::after {
   width: 100%;
+}
+
+.navCaret {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.navLinkOpen .navCaret {
+  transform: rotate(180deg) translateY(1px);
+  color: var(--text-primary);
+}
+
+.submenu {
+  position: absolute;
+  inset-inline-start: 0;
+  top: calc(100% + 8px);
+  min-width: 200px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.submenuOpen {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.submenuLink {
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    background: var(--surface-muted);
+    color: var(--text-primary);
+  }
 }
 
 .menuToggle {
@@ -363,6 +434,47 @@
     text-decoration: none;
     color: inherit;
   }
+}
+
+.mobileNavItem {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobileNavToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-bottom: 4px;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-soft) 65%, transparent);
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.mobileNavChevron {
+  font-size: 20px;
+}
+
+.mobileSubmenu {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 12px;
+
+  a {
+    font-size: 16px;
+    border-bottom: none;
+  }
+}
+
+.mobileSubmenuOpen {
+  display: flex;
 }
 
 .mobileActions {

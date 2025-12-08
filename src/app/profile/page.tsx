@@ -2,12 +2,13 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import SiteHeader, { type NavItem } from '@/components/home/SiteHeader'
+import SiteHeader from '@/components/home/SiteHeader'
 import SiteFooter from '@/components/home/SiteFooter'
 import BackToTopButton from '@/components/BackToTopButton'
 import { authOptions } from '../api/auth/[...nextauth]/route'
 import styles from './profile.module.scss'
 import { DEFAULT_PREFERENCES } from '@/lib/user-preferences'
+import { mainNavItems } from '@/lib/navigation'
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions)
@@ -18,18 +19,12 @@ export default async function ProfilePage() {
 
   const { user, hasVtuberRole, isGuildMember, discordMember, preferences } = session
   const preferenceSnapshot = preferences ?? DEFAULT_PREFERENCES
-  
-  const navItems: NavItem[] = [
-    { label: 'Kokori Mag', href: '/kokori-mag' },
-    { label: 'Faire un don', href: '/dons' }, 
-    { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
-  ]
 
   const displayInitial = (user?.name ?? user?.email ?? 'M').charAt(0).toUpperCase()
 
   return (
     <>
-      <SiteHeader navItems={navItems} />
+      <SiteHeader navItems={mainNavItems} />
       <main className={styles.wrapper}>
         <header className={styles.header}>
           <div className={styles.identity}>

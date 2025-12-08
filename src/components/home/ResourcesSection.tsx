@@ -17,7 +17,7 @@ type ResourcesSectionProps = {
 
 const listItems = [
   'Guides OBS, VTS et capture pour un workflow stable.',
-  'Retour d experience de talents confirmes et fiches bonnes pratiques.',
+  'Retour d\'expérience de talents confirmes et fiches bonnes pratiques.',
   'Templates de planning, briefs sponsors et checklists pre-live.',
 ]
 

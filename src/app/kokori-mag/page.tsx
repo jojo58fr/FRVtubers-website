@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import SiteHeader, { type NavItem } from '../../components/home/SiteHeader'
+import SiteHeader from '../../components/home/SiteHeader'
 import SiteFooter from '../../components/home/SiteFooter'
 import BackToTopButton from '../../components/BackToTopButton'
 import MagazineGrid from '../../components/kokori/MagazineGrid'
@@ -9,12 +9,7 @@ import styles from './page.module.scss'
 import KokoriMagIllustration from '../../assets/kokori_mag.webp'
 import { faBook, faNewspaper } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
-const navItems: NavItem[] = [
-  { label: 'Kokori Mag', href: '/kokori-mag' },
-  { label: 'Faire un don', href: '/dons' }, 
-  { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
-]
+import { mainNavItems } from '@/lib/navigation'
 
 export const revalidate = 120
 
@@ -24,7 +19,7 @@ const KokoriMagPage = async () => {
 
   return (
     <div className={styles.page}>
-      <SiteHeader navItems={navItems} />
+      <SiteHeader navItems={mainNavItems} />
       <main className={styles.content}>
         <section className={styles.hero}>
           <div className={styles.heroContent}>
@@ -70,4 +65,3 @@ const KokoriMagPage = async () => {
 }
 
 export default KokoriMagPage
-

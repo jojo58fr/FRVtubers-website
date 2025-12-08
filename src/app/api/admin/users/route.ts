@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import prisma from '@/lib/prisma'
 import { ADMIN_ROLE_METADATA, ADMIN_ROLE_VALUES } from '@/lib/admin-roles'
 import { authOptions } from '../../auth/[...nextauth]/route'
-import { isComiteSession } from '@/lib/admin-auth'
+import { isComiteSession, isModeratorSession } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +16,8 @@ export async function GET(request: Request) {
   if (!isComiteSession(session)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const canSeeEmail = isModeratorSession(session)
 
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q')?.trim()
@@ -66,7 +68,8 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     users: users.map((user) => ({
-      ...user,
+      ...(canSeeEmail ? user : (({ email, ...rest }) => rest)(user)),
+      ...(canSeeEmail ? {} : {}),
       roleLabel: ADMIN_ROLE_METADATA[user.adminRole].label,
     })),
     meta: {
@@ -78,4 +81,3 @@ export async function GET(request: Request) {
     },
   })
 }
-

@@ -1,0 +1,142 @@
+import type { Metadata } from 'next'
+import SiteHeader from '@/components/home/SiteHeader'
+import SiteFooter from '@/components/home/SiteFooter'
+import BackToTopButton from '@/components/BackToTopButton'
+import { mainNavItems } from '@/lib/navigation'
+import styles from './page.module.scss'
+
+type Partner = {
+  name: string
+  description: string
+  links: Array<{ label: string; href: string }>
+  logoText: string
+  logoTint: string
+}
+
+export const metadata: Metadata = {
+  title: 'Partenaires | FRVtubers',
+  description:
+    'Découvrez les structures partenaires de FRVtubers et comment proposer une collaboration avec la communauté.',
+}
+
+const partners: Partner[] = [
+  {
+    name: 'VTuberQC',
+    description: 'Communauté québécoise VTuber avec événements et entraide locale.',
+    links: [{ label: 'Site web', href: 'https://vtuberqc.ca/' }],
+    logoText: 'VQ',
+    logoTint: '#7c3aed',
+  },
+  {
+    name: 'VTuberFans FR',
+    description: 'Serveur Discord dédié aux fans et créateurs francophones.',
+    links: [{ label: 'Discord', href: 'https://discord.gg/Uv7dcyJ' }],
+    logoText: 'VF',
+    logoTint: '#2563eb',
+  },
+  {
+    name: 'Nyassobi',
+    description: 'Collectif créatif proposant des outils et formations pour streamers.',
+    links: [{ label: 'Site web', href: 'https://nyassobi.fr/' }],
+    logoText: 'NY',
+    logoTint: '#f97316',
+  },
+  {
+    name: 'Virtuellement Virtuel',
+    description: 'Projet VR qui rassemble des créateurs virtuels autour d’événements immersifs.',
+    links: [
+      { label: 'Discord', href: 'https://discord.gg/8kBR2R5AEp' },
+      { label: 'Groupe VRC', href: 'https://vrc.group/VIRVIR.5702' },
+      { label: 'Twitter', href: 'https://x.com/VVirtuelFr' },
+    ],
+    logoText: 'VV',
+    logoTint: '#10b981',
+  },
+]
+
+const PartnersPage = () => {
+  return (
+    <div className={styles.page}>
+      <SiteHeader navItems={mainNavItems} />
+      <main className={styles.content}>
+        <section className={styles.hero}>
+          <div className={styles.heroText}>
+            <p className={styles.kicker}>Partenariats</p>
+            <h1>Nos partenaires et collaborations</h1>
+            <p>
+              FRVtubers travaille main dans la main avec les structures déjà actives dans l’écosystème VTuber.
+              Nous contactons les gérants pour imaginer des projets communs et donner plus de visibilité à la scène
+              francophone. Voici les partenaires actuels : n’hésitez pas à visiter leur Discord ou leur site&nbsp;!
+            </p>
+            <p className={styles.contact}>
+              Tu veux devenir partenaire ? Écris-nous sur <a href="mailto:frvtubers@gmail.com">frvtubers@gmail.com</a>{' '}
+              ou via le canal support sur Discord.
+            </p>
+          </div>
+        </section>
+
+        <section className={styles.partnersSection}>
+          <div className={styles.sectionHeader}>
+            <h2>Ils avancent avec nous</h2>
+            <p>Des communautés et projets qui partagent la même énergie pour soutenir les créateurs virtuels.</p>
+          </div>
+          <div className={styles.partnerGrid}>
+            {partners.map((partner) => (
+              <article key={partner.name} className={styles.partnerCard}>
+                <div
+                  className={styles.partnerLogo}
+                  style={{ background: partner.logoTint }}
+                  aria-hidden="true"
+                >
+                  {partner.logoText}
+                </div>
+                <div className={styles.partnerBody}>
+                  <header className={styles.partnerTitle}>
+                    <h3>{partner.name}</h3>
+                    <p className={styles.partnerSubtitle}>Logo en attente — placeholder</p>
+                  </header>
+                  <p className={styles.partnerDescription}>{partner.description}</p>
+                  <div className={styles.partnerLinks}>
+                    {partner.links.map((link) => (
+                      <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.cta}>
+          <div>
+            <p className={styles.kicker}>Collaborer</p>
+            <h2>Une idée de partenariat ?</h2>
+            <p>
+              Nous cherchons des initiatives prêtes à construire des ponts entre communautés : workshops, événements
+              en ligne, relais de communication ou support technique. Parlons-en !
+            </p>
+            <div className={styles.ctaActions}>
+              <a className={styles.primaryButton} href="mailto:frvtubers@gmail.com">
+                Proposer un partenariat
+              </a>
+              <a
+                className={styles.secondaryButton}
+                href="https://discord.gg/meyHQYWvjU"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Ouvrir un ticket support
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+      <BackToTopButton />
+      <SiteFooter />
+    </div>
+  )
+}
+
+export default PartnersPage

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import prisma from '@/lib/prisma'
 import { authOptions } from '../../../auth/[...nextauth]/route'
-import { isComiteSession } from '@/lib/admin-auth'
+import { isComiteSession, isModeratorSession } from '@/lib/admin-auth'
 import { ADMIN_ROLE_METADATA, isValidAdminRole } from '@/lib/admin-roles'
 
 export const dynamic = 'force-dynamic'
@@ -83,6 +83,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const canSeeEmail = isModeratorSession(session)
+
   const { id } = await context.params
   if (!id) {
     return NextResponse.json({ error: 'Missing user id' }, { status: 400 })
@@ -107,7 +109,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   return NextResponse.json({
     user: {
-      ...user,
+      ...(canSeeEmail ? user : (({ email, ...rest }) => rest)(user)),
+      ...(canSeeEmail ? {} : {}),
       roleLabel: ADMIN_ROLE_METADATA[user.adminRole].label,
     },
   })

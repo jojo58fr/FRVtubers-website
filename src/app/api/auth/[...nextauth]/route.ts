@@ -1,5 +1,6 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth'
 import type { JWT } from 'next-auth/jwt'
+import type { CookieSerializeOptions } from 'cookie'
 import DiscordProvider from 'next-auth/providers/discord'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
@@ -27,12 +28,140 @@ if (!nextAuthSecret) {
 
 const MEMBER_CACHE_MS = Number(process.env.DISCORD_MEMBER_CACHE_MS ?? 5 * 60 * 1000)
 const ROLE_STRING_SEPARATOR = ','
+const NEXTAUTH_INTERNAL_URL = process.env.NEXTAUTH_URL_INTERNAL ?? process.env.NEXTAUTH_URL
+const NEXTAUTH_SESSION_MAX_AGE = Number(process.env.NEXTAUTH_SESSION_MAX_AGE ?? 30 * 24 * 60 * 60)
+const useSecureCookies =
+  process.env.NEXTAUTH_FORCE_SECURE_COOKIES === 'true' ||
+  process.env.NODE_ENV === 'production' ||
+  (NEXTAUTH_INTERNAL_URL?.startsWith('https://') ?? false)
+const COOKIE_PREFIX = useSecureCookies ? '__Secure-' : ''
+const CSRF_PREFIX = useSecureCookies ? '__Host-' : ''
+
+const safeParseHostname = (value?: string): string | undefined => {
+  if (!value) {
+    return undefined
+  }
+
+  try {
+    const url = new URL(value)
+    if (url.hostname === 'localhost') {
+      return undefined
+    }
+
+    return url.hostname
+  } catch {
+    const trimmed = value.trim()
+    if (!trimmed) {
+      return undefined
+    }
+
+    const hostCandidate = trimmed.replace(/^https?:\/\//, '').split(/[/?#]/)[0].split(':')[0]
+    if (!hostCandidate || hostCandidate === 'localhost') {
+      return undefined
+    }
+
+    return hostCandidate
+  }
+}
+
+const normalizeCookieDomain = (candidate?: string): string | undefined => {
+  if (!candidate) {
+    return undefined
+  }
+
+  const trimmed = candidate.trim()
+  if (!trimmed || trimmed === 'localhost') {
+    return undefined
+  }
+
+  return trimmed.startsWith('.') ? trimmed : `.${trimmed}`
+}
+
+const cookieDomain = normalizeCookieDomain(
+  process.env.NEXTAUTH_COOKIE_DOMAIN ?? safeParseHostname(NEXTAUTH_INTERNAL_URL) ?? safeParseHostname(process.env.NEXTAUTH_URL),
+)
+
+const cookieSameSite: CookieSerializeOptions['sameSite'] = useSecureCookies ? 'none' : 'lax'
+
+const baseCookieOptions: CookieSerializeOptions = {
+  httpOnly: true,
+  sameSite: cookieSameSite,
+  path: '/',
+  secure: useSecureCookies,
+}
+
+const cookieOptions = (overrides: Partial<CookieSerializeOptions> = {}): CookieSerializeOptions => ({
+  ...baseCookieOptions,
+  ...(cookieDomain ? { domain: cookieDomain } : {}),
+  ...overrides,
+})
+
+const nextAuthCookies = {
+  sessionToken: {
+    name: `${COOKIE_PREFIX}next-auth.session-token`,
+    options: cookieOptions({ maxAge: NEXTAUTH_SESSION_MAX_AGE }),
+  },
+  callbackUrl: {
+    name: `${COOKIE_PREFIX}next-auth.callback-url`,
+    options: cookieOptions(),
+  },
+  csrfToken: {
+    name: `${CSRF_PREFIX}next-auth.csrf-token`,
+    options: cookieOptions({ maxAge: 24 * 60 * 60 }),
+  },
+  pkceCodeVerifier: {
+    name: `${COOKIE_PREFIX}next-auth.pkce.code_verifier`,
+    options: cookieOptions({ maxAge: 60 * 15 }),
+  },
+  state: {
+    name: `${COOKIE_PREFIX}next-auth.state`,
+    options: cookieOptions({ maxAge: 60 * 15 }),
+  },
+  nonce: {
+    name: `${COOKIE_PREFIX}next-auth.nonce`,
+    options: cookieOptions(),
+  },
+}
 
 const asSupportedTheme = (theme?: string | null): SupportedTheme =>
   theme === 'dark' ? 'dark' : 'light'
 
 const asSupportedLanguage = (language?: string | null): SupportedLanguage =>
   language === 'en' ? 'en' : 'fr'
+
+const parseRedirectAllowList = (value?: string): string[] => {
+  if (!value) {
+    return []
+  }
+
+  return value
+    .split(/[,\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+const allowedRedirects = parseRedirectAllowList(process.env.NEXTAUTH_ALLOWED_REDIRECTS)
+const shouldLogRedirects = process.env.NEXTAUTH_LOG_REDIRECTS === 'true'
+const shouldLogNextAuth = process.env.NEXTAUTH_VERBOSE_LOG === 'true'
+const logRedirectDecision = (...args: unknown[]) => {
+  if (shouldLogRedirects) {
+    console.log('[nextauth:redirect]', ...args)
+  }
+}
+
+const nextAuthLogger = shouldLogNextAuth
+  ? {
+      error(code: string, metadata: unknown) {
+        console.error('[nextauth:error]', code, metadata)
+      },
+      warn(code: string, metadata: unknown) {
+        console.warn('[nextauth:warn]', code, metadata)
+      },
+      debug(code: string, metadata: unknown) {
+        console.log('[nextauth:debug]', code, metadata)
+      },
+    }
+  : undefined
 
 const parseRolesString = (roles?: string | null): string[] => {
   if (!roles) {
@@ -214,7 +343,10 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
+    maxAge: NEXTAUTH_SESSION_MAX_AGE,
   },
+  cookies: nextAuthCookies,
+  useSecureCookies,
   events: {
     async signIn({ user, account, profile }) {
       if (account?.provider !== 'discord' || !user?.id || !profile) {
@@ -247,6 +379,52 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    redirect({ url, baseUrl }) {
+      logRedirectDecision('redirect-start', { url, baseUrl, allowedRedirects })
+
+      try {
+        const target = new URL(url, baseUrl)
+        const base = new URL(baseUrl)
+
+        if (target.origin === base.origin) {
+          logRedirectDecision('same-origin', { target: target.toString() })
+          return target.toString()
+        }
+
+        const isAllowed = allowedRedirects.some((allowedCandidate) => {
+          try {
+            const allowedUrl = new URL(allowedCandidate)
+            const sameOrigin = allowedUrl.origin === target.origin
+            const pathMatches =
+              target.pathname === allowedUrl.pathname ||
+              target.pathname.startsWith(
+                allowedUrl.pathname.endsWith('/') ? allowedUrl.pathname : `${allowedUrl.pathname}/`,
+              )
+
+            return sameOrigin && pathMatches
+          } catch {
+            return false
+          }
+        })
+
+        logRedirectDecision('external', {
+          target: target.toString(),
+          allowed: isAllowed,
+          allowedRedirects,
+        })
+
+        if (isAllowed) {
+          logRedirectDecision('redirect-allowed', { to: target.toString() })
+          return target.toString()
+        }
+
+        logRedirectDecision('redirect-fallback-base', { to: baseUrl })
+        return baseUrl
+      } catch (error) {
+        logRedirectDecision('invalid-url', { url, baseUrl, error })
+        return baseUrl
+      }
+    },
     async jwt({ token, account, trigger, session }) {
       if (account?.provider === 'discord') {
         token.discordAccessToken = account.access_token as string
@@ -415,9 +593,10 @@ export const authOptions: NextAuthOptions = {
     },
   },
   secret: nextAuthSecret,
-  pages: {
+  ...(nextAuthLogger ? { logger: nextAuthLogger } : {}),
+  /*pages: {
     signIn: '/login',
-  },
+  },*/
 }
 
 const handler = NextAuth(authOptions)

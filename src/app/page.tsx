@@ -1,4 +1,4 @@
-import SiteHeader, { type NavItem } from '../components/home/SiteHeader'
+import SiteHeader from '../components/home/SiteHeader'
 import HeroSection from '../components/home/HeroSection'
 import CommunitySection from '../components/home/CommunitySection'
 import ResourcesSection from '../components/home/ResourcesSection'
@@ -22,6 +22,7 @@ import {
   faVideo,
 } from '@fortawesome/free-solid-svg-icons'
 import { faDiscord, faTwitch, faYoutube } from '@fortawesome/free-brands-svg-icons'
+import { mainNavItems } from '@/lib/navigation'
 
 const { DISCORD_GUILD_ID } = process.env
 
@@ -50,15 +51,9 @@ async function fetchDiscordPresenceCount(): Promise<number | null> {
   }
 }
 
-const navItems: NavItem[] = [
-  { label: 'Kokori Mag', href: '/kokori-mag' },
-  { label: 'Faire un don', href: '/dons' }, 
-  { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
-]
-
 const buildStats = (memberCount: number | null) => {
   const formatted = memberCount?.toLocaleString('fr-FR')
-  const value = '950+';
+  const value = '1000+';
 
   return [
     {
@@ -166,7 +161,7 @@ const HomePage = async () => {
 
   return (
     <div className={styles.page}>
-      <SiteHeader navItems={navItems} />
+      <SiteHeader navItems={mainNavItems} />
       <main className={styles.content}>
         <HeroSection stats={stats} streamUrl={streamUrl} twitchEmbedUrl={twitchEmbedUrl} />
         <CommunitySection pillars={communityPillars} />

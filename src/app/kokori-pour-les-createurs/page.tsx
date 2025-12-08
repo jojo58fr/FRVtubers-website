@@ -9,25 +9,20 @@ import {
   faDiscord,
 } from '@fortawesome/free-brands-svg-icons'
 import { faCircleCheck, faTriangleExclamation, faQuoteLeft, faWarning } from '@fortawesome/free-solid-svg-icons'
-import SiteHeader, { type NavItem } from '../../components/home/SiteHeader'
+import SiteHeader from '../../components/home/SiteHeader'
 import SiteFooter from '../../components/home/SiteFooter'
 import BackToTopButton from '../../components/BackToTopButton'
 import styles from './page.module.scss'
 
 import KokoriGoodEnough from '../../assets/kokori_goodenough.png'
 import CreditExampleList from '../../components/kokori/CreditExampleList'
+import { mainNavItems } from '@/lib/navigation'
 
 type AssetDownload = {
   title: string
   description: string
   file: string
 }
-
-const navItems: NavItem[] = [
-  { label: 'Kokori Mag', href: '/kokori-mag' },
-  { label: 'Faire un don', href: '/dons' }, 
-  { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
-]
 
 export const metadata: Metadata = {
   title: 'Kokori pour les créateurs — Creative Commons | FRVtubers',
@@ -95,7 +90,7 @@ const assetVideos = [
 const KokoriForCreatorsPage = () => {
   return (
     <div className={styles.page}>
-      <SiteHeader navItems={navItems} />
+      <SiteHeader navItems={mainNavItems} />
       <main className={styles.content}>
         <section className={styles.hero}>
           <div className={styles.heroContent}>

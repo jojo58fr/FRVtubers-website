@@ -15,6 +15,7 @@ import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 export type NavItem = {
   label: string
   href: string
+  children?: Array<{ label: string; href: string }>
 }
 
 type SiteHeaderProps = {
@@ -26,7 +27,10 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
   const hasVtuberRole = session?.hasVtuberRole ?? false
   const isAuthenticated = Boolean(session)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [openMobileItem, setOpenMobileItem] = useState<string | null>(null)
   const overflowRef = useRef<string>('')
+  const dropdownCloseTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!overflowRef.current) {
@@ -43,6 +47,35 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
       document.documentElement.style.overflow = overflowRef.current
     }
   }, [menuOpen])
+
+  useEffect(() => {
+    if (!menuOpen) {
+      setOpenMobileItem(null)
+    }
+  }, [menuOpen])
+
+  useEffect(() => {
+    return () => {
+      if (dropdownCloseTimeout.current) {
+        clearTimeout(dropdownCloseTimeout.current)
+      }
+    }
+  }, [])
+
+  const handleOpenDropdown = (label: string | null) => {
+    if (dropdownCloseTimeout.current) {
+      clearTimeout(dropdownCloseTimeout.current)
+      dropdownCloseTimeout.current = null
+    }
+    setOpenDropdown(label)
+  }
+
+  const handleCloseDropdown = () => {
+    if (dropdownCloseTimeout.current) {
+      clearTimeout(dropdownCloseTimeout.current)
+    }
+    dropdownCloseTimeout.current = setTimeout(() => setOpenDropdown(null), 160)
+  }
 
   const closeMenu = () => setMenuOpen(false)
   const toggleMenu = () => setMenuOpen((prev) => !prev)
@@ -82,11 +115,43 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
         </div>
 
         <nav className={styles.navigation}>
-          {navItems.map((item) => (
-            <a key={item.href} href={item.href} className={styles.navLink}>
-              {item.label}
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const hasChildren = Array.isArray(item.children) && item.children.length > 0
+            const isOpen = openDropdown === item.label
+
+            return (
+              <div
+                key={item.href}
+                className={`${styles.navItem} ${hasChildren ? styles.navItemHasChildren : ''}`}
+                onMouseEnter={() => handleOpenDropdown(item.label)}
+                onMouseLeave={handleCloseDropdown}
+              >
+                <a
+                  href={item.href}
+                  className={`${styles.navLink} ${hasChildren ? styles.navLinkHasChildren : ''} ${
+                    isOpen ? styles.navLinkOpen : ''
+                  }`}
+                  onClick={(event) => {
+                    if (hasChildren) {
+                      event.preventDefault()
+                    }
+                  }}
+                >
+                  {item.label}
+                  {hasChildren ? <span className={styles.navCaret} aria-hidden="true">▾</span> : null}
+                </a>
+                {hasChildren ? (
+                  <div className={`${styles.submenu} ${isOpen ? styles.submenuOpen : ''}`}>
+                    {item.children!.map((child) => (
+                      <a key={child.href} href={child.href} className={styles.submenuLink}>
+                        {child.label}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
         </nav>
 
         <button
@@ -162,11 +227,39 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
         </div>
 
         <nav className={styles.mobileNav}>
-          {navItems.map((item) => (
-            <a key={item.href} href={item.href} onClick={closeMenu}>
-              {item.label}
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const hasChildren = Array.isArray(item.children) && item.children.length > 0
+            const isOpen = openMobileItem === item.label
+
+            if (!hasChildren) {
+              return (
+                <a key={item.href} href={item.href} onClick={closeMenu}>
+                  {item.label}
+                </a>
+              )
+            }
+
+            return (
+              <div key={item.href} className={styles.mobileNavItem}>
+                <button
+                  type="button"
+                  className={styles.mobileNavToggle}
+                  onClick={() => setOpenMobileItem(isOpen ? null : item.label)}
+                  aria-expanded={isOpen}
+                >
+                  {item.label}
+                  <span className={styles.mobileNavChevron}>{isOpen ? '−' : '+'}</span>
+                </button>
+                <div className={`${styles.mobileSubmenu} ${isOpen ? styles.mobileSubmenuOpen : ''}`}>
+                  {item.children!.map((child) => (
+                    <a key={child.href} href={child.href} onClick={closeMenu}>
+                      {child.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </nav>
 
         <div className={styles.mobileActions}>

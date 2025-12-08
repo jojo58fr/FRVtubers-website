@@ -1,5 +1,4 @@
 # API FRVtubers
-
 Ce document r\u00e9sume les routes backend expos\u00e9es par l'application Next.js et explique comment consommer l'authentification Discord depuis d'autres projets React.
 
 - URL de base de l'environnement local : `http://localhost:3000`
@@ -24,6 +23,13 @@ Ce document r\u00e9sume les routes backend expos\u00e9es par l'application Next.
 - `DISCORD_VTUBER_ROLE_ID` : R\u00f4le Discord qui d\u00e9clenche `hasVtuberRole`.
 - `NEXTAUTH_SECRET` : Secret NextAuth (g\u00e9n\u00e9rez-le via `npx auth secret`).
 - `NEXTAUTH_URL` : URL publique de l'application (`http://localhost:3000` en local).
+- `NEXTAUTH_URL_INTERNAL` : URL interne ou priv\u00e9e que les services annexes utilisent pour valider les cookies g\u00e9n\u00e9r\u00e9s par le site principal.
+- `NEXTAUTH_COOKIE_DOMAIN` : Domaine parent (ex. `.frvtubers.example.com`) utilis\u00e9 pour les cookies NextAuth (`next-auth.session-token`, `__Secure-next-auth.session-token`, `next-auth.csrf-token`).
+- `NEXTAUTH_SESSION_MAX_AGE` : Dur\u00e9e de vie (en secondes) du cookie de session JWT (par d\u00e9faut 30 jours).
+- `NEXTAUTH_FORCE_SECURE_COOKIES` : Force `Secure` m\u00eame si NextAuth ne d\u00e9tecte pas HTTPS (pratique pour les previews/tunnels).
+- `NEXTAUTH_ALLOWED_REDIRECTS` : URLs suppl\u00e9mentaires autoris\u00e9es pour les callbacks OAuth (s\u00e9par\u00e9es par des virgules). Exemple : `http://localhost:5173/login`.
+- `NEXTAUTH_LOG_REDIRECTS` : Active (`true`) ou désactive (`false`) un log console lors des décisions de redirection OAuth.
+- `NEXTAUTH_VERBOSE_LOG` : Active (`true`) les logs NextAuth (erreurs/warn/debug) pour diagnostiquer les callbacks OAuth.
 
 ### Donn\u00e9es renvoy\u00e9es par la session
 
@@ -43,6 +49,7 @@ Exemple de r\u00e9ponse `GET /api/auth/session` (format JSON) :
   },
   "hasVtuberRole": true,
   "isGuildMember": true,
+  "adminRole": "MODERATOR",
   "expires": "2025-05-05T16:30:00.000Z"
 }
 ```
@@ -53,6 +60,7 @@ Champs personnalis\u00e9s disponibles :
 - `discordMember.pending` : statut d\u2019adh\u00e9sion en attente dans Discord.
 - `hasVtuberRole` : `true` si l'utilisateur poss\u00e8de le r\u00f4le `DISCORD_VTUBER_ROLE_ID`.
 - `isGuildMember` : `true` si l'utilisateur est dans le serveur, `false` s'il ne l'est pas, `undefined` si l'information n'est pas disponible.
+- `adminRole` : r\u00f4le interne d'administration (`MEMBER`, `MODERATOR`, `COMITE`) synchronis\u00e9 depuis la base, `MEMBER` par d\u00e9faut.
 
 Le backend rafra\u00eechit automatiquement les tokens Discord et met \u00e0 jour les r\u00f4les \u00e0 chaque requ\u00eate de session.
 
@@ -120,6 +128,8 @@ Les cookies NextAuth (session JWT chiffr\u00e9) sont li\u00e9s au domaine. Pour 
 - Configurez `NEXTAUTH_URL=https://frvtubers.example.com` sur le backend, et ajoutez `NEXT_PUBLIC_FRVTUBERS_AUTH_ORIGIN=https://frvtubers.example.com` dans vos autres apps pour pointer vers l'API centrale.
 - Ajoutez un en-t\u00eate `credentials: 'include'` dans vos requ\u00eates `fetch` afin que les cookies soient envoy\u00e9s.
 
+Assurez-vous que `NEXTAUTH_URL_INTERNAL` pointe \u00e9galement vers le domaine principal et que `NEXTAUTH_COOKIE_DOMAIN` commence par un point (ex. `.frvtubers.example.com`). Les cookies NextAuth (`next-auth.session-token`, `__Secure-next-auth.session-token`, `next-auth.csrf-token`) sont configur\u00e9s avec `SameSite=None`, `Secure` et ce domaine parent pour \u00eatre partag\u00e9s par tous les sous-domaines.
+
 ### 2. Next.js 13+ avec `next-auth/react`
 
 Si vos autres apps sont aussi en Next.js :
@@ -173,13 +183,17 @@ export function getSignInUrl(callbackUrl?: string) {
 }
 ```
 
-2. Lorsqu'un utilisateur clique sur \u00ab Se connecter \u00bb, redirigez-le vers `getSignInUrl(window.location.href)`. Apr\u00e8s l'OAuth, Discord redirigera l'utilisateur vers `callbackUrl`, avec les cookies NextAuth positionn\u00e9s sur le domaine principal.
+2. Lorsqu'un utilisateur clique sur \u00ab Se connecter \u00bb, redirigez-le vers `getSignInUrl(window.location.href)`. Apr\u00e8s l'OAuth, Discord redirigera l'utilisateur vers `callbackUrl`, avec les cookies NextAuth positionn\u00e9s sur le domaine principal. En local (ex. Vite sur `http://localhost:5173/login`), ajoutez `NEXTAUTH_ALLOWED_REDIRECTS=http://localhost:5173/login` dans votre `.env` NextAuth pour autoriser cette redirection.
 3. Pour savoir si l'utilisateur est connect\u00e9, appelez `fetchSession()` au montage et stockez le r\u00e9sultat dans votre state.
 4. Ajoutez un bouton \u00ab Se d\u00e9connecter \u00bb qui fait `POST ${AUTH_BASE_URL}/api/auth/signout` avec `credentials: 'include'`.
 
 > Important : les cookies de session ne sont partag\u00e9s que si vos applications partagent le m\u00eame domaine (ou sous-domaine) et si le navigateur autorise les cookies inter-sous-domaines. Pr\u00e9voyez un sous-domaine parent commun (`*.frvtubers.example.com`) et param\u00e8tres `NEXTAUTH_URL`/`NEXTAUTH_URL_INTERNAL` en cons\u00e9quence.
 
-### 4. Acc\u00e8s API depuis un backend externe
+### 4. FRVStream (client vid\u00e9o)
+
+Le front FRVStream tourne sur un sous-domaine et a besoin de r\u00e9utiliser la session du site principal. Il doit appeler `POST https://frvtubers.example.com/api/v1/auth/sync` avec `credentials: 'include'` pour transmettre les cookies NextAuth. L'endpoint r\u00e9pond avec la m\u00eame session enrichie (`user`, `discordMember`, `hasVtuberRole`, `isGuildMember`, etc.) et repose uniquement sur les cookies (pas d'Authorization header). Gr\u00e2ce au domaine parent `.frvtubers.example.com`, aux cookies `SameSite=None`/`Secure` et \u00e0 `NEXTAUTH_URL_INTERNAL`, les navigateurs incluent automatiquement la session. En cas de session manquante, FRVStream re\u00e7oit `401` et doit rediriger vers la page de connexion centrale.
+
+### 5. Acc\u00e8s API depuis un backend externe
 
 Si vous avez un backend Node/Express ou un worker qui doit v\u00e9rifier l'identit\u00e9 :
 

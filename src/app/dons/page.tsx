@@ -1,18 +1,13 @@
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowUpRightFromSquare, faShieldHeart, faCircleCheck, faCircleNodes } from '@fortawesome/free-solid-svg-icons'
-import SiteHeader, { type NavItem } from '../../components/home/SiteHeader'
+import SiteHeader from '../../components/home/SiteHeader'
 import SiteFooter from '../../components/home/SiteFooter'
 import BackToTopButton from '../../components/BackToTopButton'
 import styles from './page.module.scss'
+import { mainNavItems } from '@/lib/navigation'
 
 const OPEN_COLLECTIVE_URL = 'https://opencollective.com/frvtubers'
-
-const navItems: NavItem[] = [
-  { label: 'Kokori Mag', href: '/kokori-mag' },
-  { label: 'Faire un don', href: '/dons' }, 
-  { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
-]
 
 const highlightCards = [
   {
@@ -42,7 +37,7 @@ const spendList = [
 const DonPage = () => {
   return (
     <div className={styles.page}>
-      <SiteHeader navItems={navItems} />
+      <SiteHeader navItems={mainNavItems} />
       <main className={styles.content}>
         <section className={styles.hero}>
           <div className={styles.heroText}>
@@ -125,5 +120,4 @@ const DonPage = () => {
 }
 
 export default DonPage
-
 

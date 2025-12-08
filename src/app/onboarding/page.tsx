@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import SiteHeader, { type NavItem } from '../../components/home/SiteHeader'
+import SiteHeader from '../../components/home/SiteHeader'
 import SiteFooter from '../../components/home/SiteFooter'
 import BackToTopButton from '../../components/BackToTopButton'
 import OnboardingForm from '../../components/onboarding/OnboardingForm'
@@ -8,6 +8,7 @@ import styles from '../../components/onboarding/Onboarding.module.scss'
 import { authOptions } from '../api/auth/[...nextauth]/route'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDiscord } from '@fortawesome/free-brands-svg-icons'
+import { mainNavItems } from '@/lib/navigation'
 
 const discordInvite = process.env.NEXT_PUBLIC_DISCORD_INVITE ?? 'https://discord.gg/meyHQYWvjU'
 const vtuberRoleId = process.env.DISCORD_VTUBER_ROLE_ID
@@ -16,12 +17,6 @@ export const metadata = {
   title: 'Onboarding FRVTubers',
   description: 'Étapes pour rejoindre la communauté et candidater au rôle VTuber.',
 }
-
-const navItems: NavItem[] = [
-  { label: 'Kokori Mag', href: '/kokori-mag' },
-  { label: 'Faire un don', href: '/dons' }, 
-  { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
-]
 
 const OnboardingPage = async () => {
   const session = await getServerSession(authOptions)
@@ -39,7 +34,7 @@ const OnboardingPage = async () => {
 
   return (
     <>
-      <SiteHeader navItems={navItems} />
+      <SiteHeader navItems={mainNavItems} />
       <main className={styles.wrapper}>
         <h1>Candidature pour devenir VtuberFR</h1>
 

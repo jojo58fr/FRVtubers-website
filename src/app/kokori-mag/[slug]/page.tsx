@@ -2,20 +2,16 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
-import SiteHeader, { type NavItem } from '../../../components/home/SiteHeader'
+import SiteHeader from '../../../components/home/SiteHeader'
 import SiteFooter from '../../../components/home/SiteFooter'
 import BackToTopButton from '../../../components/BackToTopButton'
 import MagazineViewerWrapper from '../../../components/kokori/MagazineViewerWrapper'
 import { fetchMagazineBySlug, fetchPublishedMagazines } from '../../../lib/magazines'
 import { authOptions } from '../../api/auth/[...nextauth]/route'
 import styles from './page.module.scss'
+import { mainNavItems } from '@/lib/navigation'
 
 type RouteParams = { slug: string }
-
-const navItems: NavItem[] = [
-  { label: 'Kokori Mag', href: '/kokori-mag' },
-  { label: 'Kokori pour les créateurs', href: '/kokori-pour-les-createurs' },
-]
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
   year: 'numeric',
@@ -88,7 +84,7 @@ export default async function KokoriMagazinePage({
 
   return (
     <div className={styles.page}>
-      <SiteHeader navItems={navItems} />
+      <SiteHeader navItems={mainNavItems} />
       <main className={styles.content}>
         <div className={styles.breadcrumb}>
           <Link href="/">Accueil</Link>
