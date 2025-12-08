@@ -8,14 +8,14 @@
 .content {
   max-width: 1080px;
   margin: 0 auto;
-  padding: clamp(24px, 4vw, 40px) clamp(16px, 5vw, 40px) 64px;
+  padding: clamp(28px, 5vw, 56px) clamp(20px, 6vw, 48px) 80px;
   display: flex;
   flex-direction: column;
   gap: 40px;
 }
 
 .hero {
-  padding: clamp(24px, 4vw, 40px);
+  padding: clamp(26px, 4.5vw, 44px);
   border-radius: 20px;
   background: color-mix(in srgb, var(--surface) 75%, rgba(255, 255, 255, 0.08));
   border: 1px solid color-mix(in srgb, var(--border-soft) 60%, transparent);
@@ -128,9 +128,23 @@
 }
 
 .partnerLogo {
-  width: 78px;
-  height: 78px;
+  position: relative;
+  width: 96px;
+  height: 96px;
   border-radius: 18px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface-muted) 50%, transparent);
+  box-shadow: 0 12px 18px rgba(15, 23, 42, 0.2);
+}
+
+.partnerLogoImage {
+  object-fit: contain;
+  background: var(--surface);
+}
+
+.partnerLogoFallback {
+  width: 100%;
+  height: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -138,7 +152,6 @@
   color: #ffffff;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  box-shadow: 0 12px 18px rgba(15, 23, 42, 0.2);
 }
 
 .partnerDescription {
@@ -169,12 +182,25 @@
 }
 
 .cta {
-  padding: clamp(24px, 4vw, 36px);
+  padding: clamp(28px, 5vw, 44px);
   border-radius: 18px;
   background: linear-gradient(145deg, color-mix(in srgb, var(--accent-soft) 55%, transparent), var(--surface));
   border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
   display: grid;
-  gap: 14px;
+  gap: 16px;
+
+  h2 {
+    margin: 0 0 10px;
+  }
+
+  p {
+    margin: 0 0 10px;
+    line-height: 1.65;
+  }
+
+  .kicker {
+    margin-bottom: 6px;
+  }
 }
 
 .ctaActions {

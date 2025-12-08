@@ -1,16 +1,22 @@
 import type { Metadata } from 'next'
+import type { StaticImageData } from 'next/image'
+import Image from 'next/image'
 import SiteHeader from '@/components/home/SiteHeader'
 import SiteFooter from '@/components/home/SiteFooter'
 import BackToTopButton from '@/components/BackToTopButton'
 import { mainNavItems } from '@/lib/navigation'
 import styles from './page.module.scss'
+import VtuberQCLogo from '../../assets/partenaires/VtuberQC.jpg'
+import NyassobiLogo from '../../assets/partenaires/Nyassobi.jpg'
+import VirtuellementVirtuelLogo from '../../assets/partenaires/VirtuellementVirtuel.png'
 
 type Partner = {
   name: string
   description: string
   links: Array<{ label: string; href: string }>
-  logoText: string
-  logoTint: string
+  logo?: StaticImageData
+  logoText?: string
+  logoTint?: string
 }
 
 export const metadata: Metadata = {
@@ -24,8 +30,7 @@ const partners: Partner[] = [
     name: 'VTuberQC',
     description: 'Communauté québécoise VTuber avec événements et entraide locale.',
     links: [{ label: 'Site web', href: 'https://vtuberqc.ca/' }],
-    logoText: 'VQ',
-    logoTint: '#7c3aed',
+    logo: VtuberQCLogo,
   },
   {
     name: 'VTuberFans FR',
@@ -38,8 +43,7 @@ const partners: Partner[] = [
     name: 'Nyassobi',
     description: 'Collectif créatif proposant des outils et formations pour streamers.',
     links: [{ label: 'Site web', href: 'https://nyassobi.fr/' }],
-    logoText: 'NY',
-    logoTint: '#f97316',
+    logo: NyassobiLogo,
   },
   {
     name: 'Virtuellement Virtuel',
@@ -49,8 +53,7 @@ const partners: Partner[] = [
       { label: 'Groupe VRC', href: 'https://vrc.group/VIRVIR.5702' },
       { label: 'Twitter', href: 'https://x.com/VVirtuelFr' },
     ],
-    logoText: 'VV',
-    logoTint: '#10b981',
+    logo: VirtuellementVirtuelLogo,
   },
 ]
 
@@ -83,17 +86,28 @@ const PartnersPage = () => {
           <div className={styles.partnerGrid}>
             {partners.map((partner) => (
               <article key={partner.name} className={styles.partnerCard}>
-                <div
-                  className={styles.partnerLogo}
-                  style={{ background: partner.logoTint }}
-                  aria-hidden="true"
-                >
-                  {partner.logoText}
+                <div className={styles.partnerLogo}>
+                  {partner.logo ? (
+                    <Image
+                      src={partner.logo}
+                      alt={`Logo ${partner.name}`}
+                      className={styles.partnerLogoImage}
+                      fill
+                      sizes="96px"
+                    />
+                  ) : (
+                    <span
+                      className={styles.partnerLogoFallback}
+                      style={{ background: partner.logoTint ?? 'var(--accent)' }}
+                      aria-hidden="true"
+                    >
+                      {partner.logoText ?? partner.name.charAt(0)}
+                    </span>
+                  )}
                 </div>
                 <div className={styles.partnerBody}>
                   <header className={styles.partnerTitle}>
                     <h3>{partner.name}</h3>
-                    <p className={styles.partnerSubtitle}>Logo en attente — placeholder</p>
                   </header>
                   <p className={styles.partnerDescription}>{partner.description}</p>
                   <div className={styles.partnerLinks}>
