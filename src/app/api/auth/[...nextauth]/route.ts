@@ -90,9 +90,14 @@ const baseCookieOptions: CookieSerializeOptions = {
   secure: useSecureCookies,
 }
 
-const cookieOptions = (overrides: Partial<CookieSerializeOptions> = {}): CookieSerializeOptions => ({
+const shouldIncludeCsrfDomain = CSRF_PREFIX !== '__Host-' // __Host- cookies must not include a Domain attribute
+
+const cookieOptions = (
+  overrides: Partial<CookieSerializeOptions> = {},
+  { includeDomain }: { includeDomain?: boolean } = {},
+): CookieSerializeOptions => ({
   ...baseCookieOptions,
-  ...(cookieDomain ? { domain: cookieDomain } : {}),
+  ...(includeDomain !== false && cookieDomain ? { domain: cookieDomain } : {}),
   ...overrides,
 })
 
@@ -107,7 +112,7 @@ const nextAuthCookies = {
   },
   csrfToken: {
     name: `${CSRF_PREFIX}next-auth.csrf-token`,
-    options: cookieOptions({ maxAge: 24 * 60 * 60 }),
+    options: cookieOptions({ maxAge: 24 * 60 * 60 }, { includeDomain: shouldIncludeCsrfDomain }),
   },
   pkceCodeVerifier: {
     name: `${COOKIE_PREFIX}next-auth.pkce.code_verifier`,
@@ -151,14 +156,14 @@ const logRedirectDecision = (...args: unknown[]) => {
 
 const nextAuthLogger = shouldLogNextAuth
   ? {
-      error(code: string, metadata: unknown) {
-        console.error('[nextauth:error]', code, metadata)
+      error(code: string, ...metadata: unknown[]) {
+        console.error('[nextauth:error]', code, ...metadata)
       },
-      warn(code: string, metadata: unknown) {
-        console.warn('[nextauth:warn]', code, metadata)
+      warn(code: string, ...metadata: unknown[]) {
+        console.warn('[nextauth:warn]', code, ...metadata)
       },
-      debug(code: string, metadata: unknown) {
-        console.log('[nextauth:debug]', code, metadata)
+      debug(code: string, ...metadata: unknown[]) {
+        console.log('[nextauth:debug]', code, ...metadata)
       },
     }
   : undefined

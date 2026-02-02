@@ -121,6 +121,10 @@ const handlePrismaError = (error: unknown, fallback: keyof typeof ERROR_MESSAGES
   return redirectWithError(fallback)
 }
 
+type PageProps = {
+  searchParams: Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>
+}
+
 const createMagazineAction = async (formData: FormData) => {
   'use server'
 
@@ -272,7 +276,7 @@ const deleteMagazineAction = async (formData: FormData) => {
 const firstParamValue = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] ?? null : value ?? null
 
-export default async function AdminMagazinesPage({ searchParams }: PageProps<'/admin/magazines'>) {
+export default async function AdminMagazinesPage({ searchParams }: PageProps) {
   await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/magazines` })
 
   const params = await searchParams
