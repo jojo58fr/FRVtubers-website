@@ -12,6 +12,12 @@ export default async function AdminHomePage() {
         "Gerer les parutions Kokori Mag, uploader les PDF et les miniatures, publier ou depublier.",
       href: `${ADMIN_PANEL_PATH}/magazines`,
     },
+    {
+      title: "Ressources",
+      description:
+        "Valider les ressources proposees sur FRVResources, mettre en avant ou supprimer.",
+      href: `${ADMIN_PANEL_PATH}/ressources`,
+    },
     ...(isComiteSession(session)
       ? [
           {

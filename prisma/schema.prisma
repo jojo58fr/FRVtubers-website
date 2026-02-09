@@ -36,6 +36,12 @@ enum AdminRole {
   COMITE
 }
 
+enum ResourceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -89,4 +95,47 @@ model Magazine {
   createdBy User? @relation("MagazinesCreated", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([releaseDate])
+}
+
+model ResourceSubmission {
+  id               String         @id @default(cuid())
+  submitterName    String
+  submitterEmail   String?
+  submitterDiscord String?
+  assetTitle       String
+  creatorName      String
+  assetType        String?
+  assetUrl         String
+  description      String?
+  previewImageUrl  String?
+  price            Float?
+  languages        Json?
+  status           ResourceStatus @default(PENDING)
+  featured         Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  tags             ResourceTag[]
+  clicks           ResourceClick[]
+
+  @@index([status, createdAt])
+  @@index([featured])
+}
+
+model ResourceClick {
+  id         String             @id @default(cuid())
+  resourceId String
+  createdAt  DateTime           @default(now())
+
+  resource ResourceSubmission @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId, createdAt])
+}
+
+model ResourceTag {
+  id        String               @id @default(cuid())
+  label     String
+  slug      String               @unique
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  resources ResourceSubmission[]
 }

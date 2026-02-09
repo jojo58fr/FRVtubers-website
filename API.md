@@ -116,6 +116,81 @@ R\u00e9ponses possibles :
 - `401 Unauthorized` : `{ "error": "Non authentifié" }` (si l'utilisateur n'est pas connect\u00e9)
 - `500` / `502` : erreurs li\u00e9es au webhook Discord.
 
+
+## Ressources (FRVResources)
+
+Cette partie de l'API est celle consommee par le site FRVResources. Les ressources proposees via FRVResources sont envoyees a l'API FRVtubers pour validation. Les moderateurs valident/refusent et peuvent mettre des ressources en avant dans l'espace admin.
+
+| Route | Methode | Description | Auth requise |
+| --- | --- | --- | --- |
+| `/api/resources` | POST | Soumettre une nouvelle ressource | Non |
+| `/api/resources` | GET | Lister les ressources validees (publiques) | Non |
+| `/api/resources/tags` | GET | Lister les tags disponibles | Non |
+| `/api/resources/random` | GET | Lister les ressources aleatoires (avec filtres) | Non |
+| `/api/resources/:id/click` | POST | Enregistrer un clic sur une ressource | Non |
+| `/api/admin/resources` | GET | Lister toutes les ressources (admin) | Oui |
+| `/api/admin/resources/:id` | PATCH | Mettre a jour le statut ou la mise en avant | Oui |
+| `/api/admin/resources/:id` | DELETE | Supprimer une ressource | Oui |
+
+### Soumettre une ressource
+
+Corps JSON attendu (POST `/api/resources`) :
+
+```json
+{
+  "submitterName": "Ton nom",
+  "submitterEmail": "email@example.com",
+  "submitterDiscord": "@pseudo#1234",
+  "assetTitle": "Titre de l'asset",
+  "creatorName": "Nom du createur",
+  "assetType": "overlay / emotes / audio...",
+  "assetUrl": "https://exemple.com/asset",
+  "description": "Description (optionnel)",
+  "previewImageUrl": "https://exemple.com/preview.png",
+  "price": 0,
+  "languages": ["FR", "EN"]
+}
+```
+
+Champs requis : `submitterName`, `assetTitle`, `creatorName`, `assetUrl`.
+
+Champs optionnels : `submitterEmail`, `submitterDiscord`, `assetType`, `description`, `previewImageUrl`, `price`, `languages`. `languages` accepte `FR`, `EN`, `OTHER` et peut contenir plusieurs valeurs.
+
+Reponses possibles :
+
+- `201 Created` : `{ "ok": true, "resource": { "id": "...", "status": "PENDING", "createdAt": "..." } }`
+- `400 Bad Request` : `{ "error": "Champ requis: <field>" }` ou `{ "error": "URL de l'asset invalide." }`
+
+### Lister les ressources validees
+
+`GET /api/resources?featured=true&limit=50` retourne uniquement les ressources validees (statut `APPROVED`).
+
+Parametres additionnels :
+
+- `tags=overlay,emotes` : filtre par tags (slugs, separes par des virgules).
+- `tagMode=any|all` : `any` (defaut) retourne les ressources qui ont au moins un des tags, `all` exige tous les tags.
+- `type=overlay` : filtre par type (`assetType`).
+
+### Lister les tags
+
+`GET /api/resources/tags` retourne la liste des tags et le nombre de ressources publiees par tag.
+
+### Ressources aleatoires
+
+`GET /api/resources/random?limit=6&type=overlay&tags=emotes,rigging&tagMode=any` renvoie une selection aleatoire.
+
+- `limit` : nombre max (defaut 6, max 50).
+- `type` : filtre par `assetType`.
+- `tags` / `tagMode` : idem que `/api/resources`.
+
+### Compter les clics
+
+`POST /api/resources/:id/click` enregistre un clic et renvoie le compteur mis a jour.
+
+Exemple de reponse : `{ "ok": true, "resourceId": "...", "clickCount": 12 }`.
+
+Les routes publiques (`/api/resources`, `/api/resources/random`, `/api/admin/resources`) incluent desormais `clickCount` pour chaque ressource.
+
 ## Utiliser l'auth dans d'autres applications React
 
 La route `/api/auth/[...nextauth]` agit comme un fournisseur d'identit\u00e9 centralis\u00e9. Vous pouvez r\u00e9utiliser la connexion Discord dans d'autres apps React en respectant les points suivants.
