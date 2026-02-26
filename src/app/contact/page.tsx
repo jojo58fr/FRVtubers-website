@@ -21,10 +21,10 @@ import styles from './page.module.scss'
 export const metadata: Metadata = {
   title: 'Contact | FRVtubers',
   description:
-    'Contacte l’équipe FRVtubers pour la presse, les partenariats ou toute question à propos de la communauté.',
+    'Contacte l\'équipe FRVtubers pour la presse, les partenariats ou toute question à propos de la communauté.',
 }
 
-const pressKitUrl = 'https://frvtubers.com/press-kit'
+const pressKitUrl = 'https://drive.google.com/drive/folders/1-xSIKvy3VcuZInJqrtlAxDPZQzNJd_6s?usp=sharing'
 const directEmail = 'frvtubers@gmail.com'
 
 const socialLinks = [

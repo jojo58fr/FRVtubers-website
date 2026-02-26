@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.discordapp.com',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
     ],
   },
   async headers() {

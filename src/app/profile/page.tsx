@@ -1,7 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import SiteHeader from '@/components/home/SiteHeader'
 import SiteFooter from '@/components/home/SiteFooter'
 import BackToTopButton from '@/components/BackToTopButton'
@@ -30,7 +29,7 @@ export default async function ProfilePage() {
           <div className={styles.identity}>
             <div className={styles.avatar}>
               {user?.image ? (
-                <Image src={user.image} alt={user?.name ?? 'Avatar utilisateur'} fill sizes="128px" />
+                <img src={user.image} alt={user?.name ?? 'Avatar utilisateur'} />
               ) : (
                 <span>{displayInitial}</span>
               )}

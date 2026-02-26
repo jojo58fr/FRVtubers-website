@@ -83,6 +83,26 @@ const normalizeCookieDomain = (candidate?: string): string | undefined => {
   return trimmed.startsWith('.') ? trimmed : `.${trimmed}`
 }
 
+const toAbsoluteUrl = (value?: string | null) => {
+  if (!value) {
+    return value ?? null
+  }
+
+  if (value.startsWith('http')) {
+    return value
+  }
+
+  if (!NEXTAUTH_INTERNAL_URL) {
+    return value
+  }
+
+  try {
+    return new URL(value, NEXTAUTH_INTERNAL_URL).toString()
+  } catch {
+    return value
+  }
+}
+
 const cookieDomain = normalizeCookieDomain(
   process.env.NEXTAUTH_COOKIE_DOMAIN ?? safeParseHostname(NEXTAUTH_INTERNAL_URL) ?? safeParseHostname(process.env.NEXTAUTH_URL),
 )
@@ -332,9 +352,7 @@ export const authOptions: NextAuthOptions = {
           id: profile.id,
           name: profile.global_name ?? profile.username,
           email: profile.email,
-          image: profile.avatar
-            ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png?size=256`
-            : undefined,
+          image: profile.avatar ? buildDiscordAvatarUrl(profile.id, profile.avatar) : undefined,
         }
       },
     }),
@@ -410,6 +428,7 @@ export const authOptions: NextAuthOptions = {
         const remoteAvatarUrl = avatarHash
           ? buildDiscordAvatarUrl(discordProfile.id, avatarHash)
           : rawAvatarUrl ?? null
+        const downloadUrl = rawAvatarUrl ?? remoteAvatarUrl
 
         console.log('[FRVtubers] remoteAvatarUrl', remoteAvatarUrl)
 
@@ -425,17 +444,17 @@ export const authOptions: NextAuthOptions = {
         
         console.log(`remoteavatarUrl ${remoteAvatarUrl}, avatarHash ${avatarHash}, avatarExtension ${avatarExtension}`);
 
-        if (remoteAvatarUrl && avatarHash && avatarExtension) {
+        if (downloadUrl && avatarHash && avatarExtension) {
           try {
             console.log('[discord-avatar] saving', {
               userId: user.id,
               discordId: discordProfile.id,
-              sourceUrl: remoteAvatarUrl,
+              sourceUrl: downloadUrl,
             })
             const persisted = await persistDiscordAvatar({
               discordId: discordProfile.id,
               avatarHash,
-              sourceUrl: remoteAvatarUrl,
+              sourceUrl: downloadUrl,
               extension: avatarExtension,
             })
             console.log('[discord-avatar] stored', {
@@ -452,14 +471,16 @@ export const authOptions: NextAuthOptions = {
           storedAvatar = remoteAvatarUrl
         }
 
-        console.log('[FRVtubers] avatarFinishLoaded', storedAvatar);      
+        const storedAvatarUrl = toAbsoluteUrl(storedAvatar)
+
+        console.log('[FRVtubers] avatarFinishLoaded', storedAvatarUrl)
 
 
-        if (existing?.discordAvatar && storedAvatar && existing.discordAvatar !== storedAvatar) {
+        if (existing?.discordAvatar && storedAvatarUrl && existing.discordAvatar !== storedAvatarUrl) {
           await removeLocalDiscordAvatar(existing.discordAvatar)
         }
 
-        if (existing?.image && storedAvatar && existing.image !== storedAvatar) {
+        if (existing?.image && storedAvatarUrl && existing.image !== storedAvatarUrl) {
           await removeLocalDiscordAvatar(existing.image)
         }
 
@@ -467,8 +488,8 @@ export const authOptions: NextAuthOptions = {
           where: { id: user.id },
           data: {
             discordId: discordProfile.id,
-            discordAvatar: storedAvatar,
-            image: storedAvatar ?? user.image ?? null,
+            discordAvatar: storedAvatarUrl,
+            image: storedAvatarUrl ?? user.image ?? null,
           },
         })
       } catch (error) {

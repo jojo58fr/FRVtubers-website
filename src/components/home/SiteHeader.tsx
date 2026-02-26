@@ -183,6 +183,7 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
                         width={28}
                         height={28}
                         className={styles.joinButtonAvatarImage}
+                        unoptimized
                       />
                     ) : (
                       <span className={styles.joinButtonInitial}>{profileInitial}</span>

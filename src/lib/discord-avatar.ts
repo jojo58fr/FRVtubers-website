@@ -28,15 +28,33 @@ export const buildDiscordAvatarUrl = (discordId: string, avatarHash: string) => 
   return `https://cdn.discordapp.com/avatars/${discordId}/${avatarHash}.${ext}?size=256`
 }
 
+const getLocalAvatarPath = (value?: string | null) => {
+  if (!value) {
+    return null
+  }
+
+  if (value.startsWith('/avatars/discord/')) {
+    return value
+  }
+
+  try {
+    const url = new URL(value)
+    return url.pathname.startsWith('/avatars/discord/') ? url.pathname : null
+  } catch {
+    return null
+  }
+}
+
 export const isLocalDiscordAvatar = (value?: string | null) =>
-  Boolean(value && value.startsWith('/avatars/discord/'))
+  Boolean(getLocalAvatarPath(value))
 
 export const removeLocalDiscordAvatar = async (value?: string | null) => {
-  if (!isLocalDiscordAvatar(value)) {
+  const localPath = getLocalAvatarPath(value)
+  if (!localPath) {
     return
   }
 
-  const absolutePath = path.join(PUBLIC_DIR, value.replace(/^\/+/, ''))
+  const absolutePath = path.join(PUBLIC_DIR, localPath.replace(/^\/+/, ''))
   try {
     await unlink(absolutePath)
   } catch (error) {
