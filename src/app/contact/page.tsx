@@ -67,7 +67,11 @@ const ContactPage = () => {
         <section className={styles.grid}>
           <div className={styles.card}>
             <h3>Formulaire de contact</h3>
-            <ContactForm />
+            <ContactForm
+              className={styles.form}
+              successClassName={styles.successMessage}
+              errorClassName={styles.errorMessage}
+            />
           </div>
 
           <div className={styles.card}>
