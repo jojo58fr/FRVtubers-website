@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# discord avatars (downloaded on login)
+/public/avatars/discord/
+
 # production
 /build
 

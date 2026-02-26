@@ -6,6 +6,12 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import prisma from '@/lib/prisma'
 import {
+  buildDiscordAvatarUrl,
+  getDiscordAvatarExtension,
+  persistDiscordAvatar,
+  removeLocalDiscordAvatar,
+} from '@/lib/discord-avatar'
+import {
   DEFAULT_PREFERENCES,
   mergePreferences,
   type SupportedLanguage,
@@ -358,24 +364,111 @@ export const authOptions: NextAuthOptions = {
         return
       }
 
+      console.log('[FRVtubers] try save profil');
+
       try {
         const discordProfile = profile as {
           id: string
           avatar?: string | null
+          image?: string | null
+        }
+
+        const parseDiscordAvatarUrl = (value: string) => {
+          try {
+            const url = new URL(value)
+            if (url.hostname !== 'cdn.discordapp.com') {
+              return null
+            }
+            const match = url.pathname.match(/^\/avatars\/[^/]+\/([^/.]+)\.([a-z0-9]+)$/i)
+            if (!match) {
+              return null
+            }
+            return { hash: match[1], ext: match[2].toLowerCase() }
+          } catch {
+            return null
+          }
+        }
+
+        const avatarFromProfile = discordProfile.avatar ?? undefined
+        const avatarFromProfileIsUrl =
+          typeof avatarFromProfile === 'string' && avatarFromProfile.startsWith('http')
+        const rawAvatarUrl = avatarFromProfileIsUrl
+          ? avatarFromProfile
+          : discordProfile.image ?? undefined
+
+        let avatarHash = avatarFromProfileIsUrl ? undefined : avatarFromProfile
+        let avatarExtension = avatarHash ? getDiscordAvatarExtension(avatarHash) : null
+
+        if (!avatarHash && rawAvatarUrl) {
+          const parsed = parseDiscordAvatarUrl(rawAvatarUrl)
+          if (parsed) {
+            avatarHash = parsed.hash
+            avatarExtension = parsed.ext
+          }
+        }
+
+        const remoteAvatarUrl = avatarHash
+          ? buildDiscordAvatarUrl(discordProfile.id, avatarHash)
+          : rawAvatarUrl ?? null
+
+        console.log('[FRVtubers] remoteAvatarUrl', remoteAvatarUrl)
+
+        const existing = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { discordAvatar: true, image: true },
+        })
+
+        let storedAvatar: string | null = null
+
+        console.log(`existing ${existing}, discordProfile ${discordProfile}`);
+        console.log(discordProfile);
+        
+        console.log(`remoteavatarUrl ${remoteAvatarUrl}, avatarHash ${avatarHash}, avatarExtension ${avatarExtension}`);
+
+        if (remoteAvatarUrl && avatarHash && avatarExtension) {
+          try {
+            console.log('[discord-avatar] saving', {
+              userId: user.id,
+              discordId: discordProfile.id,
+              sourceUrl: remoteAvatarUrl,
+            })
+            const persisted = await persistDiscordAvatar({
+              discordId: discordProfile.id,
+              avatarHash,
+              sourceUrl: remoteAvatarUrl,
+              extension: avatarExtension,
+            })
+            console.log('[discord-avatar] stored', {
+              userId: user.id,
+              discordId: discordProfile.id,
+              path: persisted.publicPath,
+            })
+            storedAvatar = persisted.publicPath
+          } catch (error) {
+            console.warn('Impossible de sauvegarder l’avatar Discord', error)
+            storedAvatar = remoteAvatarUrl
+          }
+        } else if (remoteAvatarUrl) {
+          storedAvatar = remoteAvatarUrl
+        }
+
+        console.log('[FRVtubers] avatarFinishLoaded', storedAvatar);      
+
+
+        if (existing?.discordAvatar && storedAvatar && existing.discordAvatar !== storedAvatar) {
+          await removeLocalDiscordAvatar(existing.discordAvatar)
+        }
+
+        if (existing?.image && storedAvatar && existing.image !== storedAvatar) {
+          await removeLocalDiscordAvatar(existing.image)
         }
 
         await prisma.user.update({
           where: { id: user.id },
           data: {
             discordId: discordProfile.id,
-            discordAvatar: discordProfile.avatar
-              ? `https://cdn.discordapp.com/avatars/${discordProfile.id}/${discordProfile.avatar}.png?size=256`
-              : null,
-            image:
-              user.image ??
-              (discordProfile.avatar
-                ? `https://cdn.discordapp.com/avatars/${discordProfile.id}/${discordProfile.avatar}.png?size=256`
-                : null),
+            discordAvatar: storedAvatar,
+            image: storedAvatar ?? user.image ?? null,
           },
         })
       } catch (error) {
@@ -472,6 +565,8 @@ export const authOptions: NextAuthOptions = {
             select: {
               theme: true,
               language: true,
+              image: true,
+              discordAvatar: true,
               discordIsMember: true,
               discordPending: true,
               discordRoles: true,
@@ -491,6 +586,10 @@ export const authOptions: NextAuthOptions = {
 
             if (dbUser.adminRole) {
               token.adminRole = dbUser.adminRole
+            }
+
+            if (dbUser.image || dbUser.discordAvatar) {
+              token.picture = dbUser.image ?? dbUser.discordAvatar ?? token.picture
             }
 
             const rolesFromDb = parseRolesString(dbUser.discordRoles)

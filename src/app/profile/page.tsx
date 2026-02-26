@@ -40,7 +40,7 @@ export default async function ProfilePage() {
               {user?.email && <p className={styles.subtitle}>{user.email}</p>}
               <div className={styles.badges}>
                 {isGuildMember && <span className={styles.badge}>Membre Discord</span>}
-                {hasVtuberRole && <span className={styles.badgeHighlight}>Role VTuber valide</span>}
+                {hasVtuberRole && <span className={styles.badgeHighlight}>Role VTuber validé</span>}
                 {discordMember?.pending && <span className={styles.badgePending}>Role en attente de validation</span>}
               </div>
             </div>
@@ -56,7 +56,7 @@ export default async function ProfilePage() {
           <ul className={styles.list}>
             <li>
               <span className={styles.listLabel}>Identifiant Discord</span>
-              <span className={styles.listValue}>{user?.id ?? 'Non communique'}</span>
+              <span className={styles.listValue}>{user?.id ?? 'Non communiqué'}</span>
             </li>
             <li>
               <span className={styles.listLabel}>Presence sur le serveur</span>
@@ -64,13 +64,13 @@ export default async function ProfilePage() {
             </li>
             <li>
               <span className={styles.listLabel}>Role VTuber</span>
-              <span className={styles.listValue}>{hasVtuberRole ? 'Attribue' : 'Non attribue'}</span>
+              <span className={styles.listValue}>{hasVtuberRole ? 'Attribué' : 'Non attribué'}</span>
             </li>
           </ul>
         </section>
 
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Preferences enregistrees</h2>
+          <h2 className={styles.sectionTitle}>Preferences enregistrées</h2>
           <ul className={styles.list}>
             <li>
               <span className={styles.listLabel}>Langue</span>

@@ -191,7 +191,7 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
                   <span>Mon profil</span>
                 </Link>
                 <button type="button" className={styles.sessionButton} onClick={handleSignOut}>
-                  Se deconnecter
+                  Se déconnecter
                 </button>
               </div>
             </>
@@ -271,7 +271,7 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
                 </Link>
               )}
               <button type="button" onClick={handleSignOut}>
-                Se deconnecter
+                Se déconnecter
               </button>
               <Link href="/profile" className={styles.mobileJoin} onClick={closeMenu} aria-label="Voir mon profil">
                 {profileImage ? (
