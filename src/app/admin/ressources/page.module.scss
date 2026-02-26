@@ -61,6 +61,28 @@
   gap: 24px;
 }
 
+.createAssetBar {
+  border-radius: 16px;
+  border: 1px solid rgba(142, 122, 255, 0.25);
+  background: rgba(17, 14, 36, 0.75);
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.createAssetBar h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.createAssetBar p {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+}
+
 .tagsPanel {
   border-radius: 16px;
   border: 1px solid rgba(142, 122, 255, 0.25);
@@ -134,6 +156,12 @@
   margin-left: auto;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.8);
+}
+
+.tagActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .controls {
@@ -389,6 +417,43 @@
   gap: 12px;
 }
 
+.assetGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.modalField span {
+  color: var(--text-secondary);
+}
+
+.modalBody input {
+  border-radius: 12px;
+  border: 1px solid rgba(142, 122, 255, 0.35);
+  background: rgba(8, 6, 21, 0.6);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  padding: 10px 12px;
+}
+
+.modalBody textarea {
+  border-radius: 12px;
+  border: 1px solid rgba(142, 122, 255, 0.35);
+  background: rgba(8, 6, 21, 0.6);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
 .modalBody select {
   border-radius: 12px;
   border: 1px solid rgba(142, 122, 255, 0.35);
@@ -397,6 +462,24 @@
   font-size: 0.95rem;
   padding: 10px 12px;
   min-height: 180px;
+}
+
+.checkboxGroup {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.checkboxItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.checkboxItem input {
+  accent-color: var(--accent-primary);
 }
 
 .modalActions {

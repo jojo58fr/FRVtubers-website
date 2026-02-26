@@ -132,6 +132,8 @@ Cette partie de l'API est celle consommee par le site FRVResources. Les ressourc
 | `/api/admin/resources/:id` | PATCH | Mettre a jour le statut ou la mise en avant | Oui |
 | `/api/admin/resources/:id` | DELETE | Supprimer une ressource | Oui |
 
+Les routes publiques resources exposent des en-tetes CORS lorsque l'origin figure dans NEXTAUTH_CORS_ALLOWED_ORIGINS (ou NEXTAUTH_URL / NEXTAUTH_URL_INTERNAL). Les preflights OPTIONS sont supportes pour GET et POST.
+
 ### Soumettre une ressource
 
 Corps JSON attendu (POST `/api/resources`) :

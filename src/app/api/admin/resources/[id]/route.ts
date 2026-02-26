@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import prisma from '@/lib/prisma'
 import { authOptions } from '../../../auth/[...nextauth]/route'
 import { isModeratorSession } from '@/lib/admin-auth'
+import { notifyResourcePublished } from '@/lib/resources-webhook'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,7 +66,19 @@ export async function PATCH(
   const updated = await prisma.resourceSubmission.update({
     where: { id },
     data,
+    select: {
+      id: true,
+      status: true,
+      assetTitle: true,
+      assetUrl: true,
+      featured: true,
+      updatedAt: true,
+    },
   })
+
+  if (statusValue === 'APPROVED' && existing.status !== 'APPROVED') {
+    await notifyResourcePublished(updated)
+  }
 
   return NextResponse.json({
     resource: {

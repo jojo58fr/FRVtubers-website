@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { buildCorsHeaders } from '@/lib/cors'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const headers = buildCorsHeaders(request.headers.get('origin'), ['POST'])
   const { id } = await params
 
   const existing = await prisma.resourceSubmission.findUnique({ where: { id } })
   if (!existing || existing.status !== 'APPROVED') {
-    return NextResponse.json({ error: 'Resource not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Resource not found' }, { status: 404, headers })
   }
 
   await prisma.resourceClick.create({
@@ -23,5 +25,12 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
     ok: true,
     resourceId: id,
     clickCount: count,
+  }, { headers })
+}
+
+export function OPTIONS(request: Request) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: buildCorsHeaders(request.headers.get('origin'), ['POST']),
   })
 }

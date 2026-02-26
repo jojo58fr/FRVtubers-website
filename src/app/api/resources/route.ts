@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { buildCorsHeaders } from '@/lib/cors'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,12 +47,13 @@ const isValidUrl = (value: string) => {
 }
 
 export async function POST(request: Request) {
+  const headers = buildCorsHeaders(request.headers.get('origin'), ['GET', 'POST'])
   let payload: Record<string, unknown>
 
   try {
     payload = (await request.json()) as Record<string, unknown>
   } catch {
-    return NextResponse.json({ error: 'Corps de requête invalide.' }, { status: 400 })
+    return NextResponse.json({ error: 'Corps de requête invalide.' }, { status: 400, headers })
   }
 
   const submitterName = parseOptionalString(payload.submitterName)
@@ -75,23 +77,23 @@ export async function POST(request: Request) {
 
   const missingField = requiredFields.find(([, value]) => !value)
   if (missingField) {
-    return NextResponse.json({ error: `Champ requis: ${missingField[0]}` }, { status: 400 })
+    return NextResponse.json({ error: `Champ requis: ${missingField[0]}` }, { status: 400, headers })
   }
 
   if (assetUrl && !isValidUrl(assetUrl)) {
-    return NextResponse.json({ error: "URL de l'asset invalide." }, { status: 400 })
+    return NextResponse.json({ error: "URL de l'asset invalide." }, { status: 400, headers })
   }
 
   if (previewImageUrl && !isValidUrl(previewImageUrl)) {
-    return NextResponse.json({ error: "URL de l'aperçu invalide." }, { status: 400 })
+    return NextResponse.json({ error: "URL de l'aperçu invalide." }, { status: 400, headers })
   }
 
   if (payload.price !== undefined && price === null) {
-    return NextResponse.json({ error: 'Prix invalide.' }, { status: 400 })
+    return NextResponse.json({ error: 'Prix invalide.' }, { status: 400, headers })
   }
 
   if (languages === null) {
-    return NextResponse.json({ error: 'Langues invalides.' }, { status: 400 })
+    return NextResponse.json({ error: 'Langues invalides.' }, { status: 400, headers })
   }
 
   const resource = await prisma.resourceSubmission.create({
@@ -124,11 +126,12 @@ export async function POST(request: Request) {
         createdAt: resource.createdAt.toISOString(),
       },
     },
-    { status: 201 },
+    { status: 201, headers },
   )
 }
 
 export async function GET(request: Request) {
+  const headers = buildCorsHeaders(request.headers.get('origin'), ['GET', 'POST'])
   const { searchParams } = new URL(request.url)
   const featuredOnly = ['1', 'true', 'yes'].includes((searchParams.get('featured') ?? '').toLowerCase())
   const assetType = parseOptionalString(searchParams.get('type'))
@@ -181,30 +184,40 @@ export async function GET(request: Request) {
     },
   })
 
-  return NextResponse.json({
-    resources: resources.map((resource) => ({
-      id: resource.id,
-      assetTitle: resource.assetTitle,
-      creatorName: resource.creatorName,
-      assetType: resource.assetType,
-      assetUrl: resource.assetUrl,
-      description: resource.description,
-      previewImageUrl: resource.previewImageUrl,
-      price: resource.price,
-      languages: Array.isArray(resource.languages) ? resource.languages : [],
-      featured: resource.featured,
-      tags: resource.tags,
-      clickCount: resource._count.clicks,
-      createdAt: resource.createdAt.toISOString(),
-    })),
-    meta: {
-      count: resources.length,
-      featuredOnly,
-      assetType,
-      tags,
-      tagMode,
-      limit,
-      generatedAt: new Date().toISOString(),
+  return NextResponse.json(
+    {
+      resources: resources.map((resource) => ({
+        id: resource.id,
+        assetTitle: resource.assetTitle,
+        creatorName: resource.creatorName,
+        assetType: resource.assetType,
+        assetUrl: resource.assetUrl,
+        description: resource.description,
+        previewImageUrl: resource.previewImageUrl,
+        price: resource.price,
+        languages: Array.isArray(resource.languages) ? resource.languages : [],
+        featured: resource.featured,
+        tags: resource.tags,
+        clickCount: resource._count.clicks,
+        createdAt: resource.createdAt.toISOString(),
+      })),
+      meta: {
+        count: resources.length,
+        featuredOnly,
+        assetType,
+        tags,
+        tagMode,
+        limit,
+        generatedAt: new Date().toISOString(),
+      },
     },
+    { headers },
+  )
+}
+
+export function OPTIONS(request: Request) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: buildCorsHeaders(request.headers.get('origin'), ['GET', 'POST']),
   })
 }

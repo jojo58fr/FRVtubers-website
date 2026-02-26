@@ -4,6 +4,7 @@ import { ADMIN_PANEL_PATH, requireAdminSession } from '@/lib/admin-auth'
 import type { PlainResourceSubmission, ResourceLanguage, ResourceTag } from '@/lib/resources'
 import { RESOURCE_SUBMISSIONS_SAMPLE } from '@/lib/resources'
 import prisma from '@/lib/prisma'
+import { notifyResourcePublished } from '@/lib/resources-webhook'
 import ResourcesManager from './ResourcesManager'
 import styles from './page.module.scss'
 
@@ -15,8 +16,11 @@ const STATUS_MESSAGES: Record<string, string> = {
   featured: 'Ressource mise en avant.',
   unfeatured: 'Ressource retirée de la mise en avant.',
   deleted: 'Ressource supprimée.',
+  'asset-created': 'Ressource créée.',
+  'asset-updated': 'Ressource mise à jour.',
   'tag-created': 'Tag créé.',
   'tag-deleted': 'Tag supprimé.',
+  'tag-updated': 'Tag mis à jour.',
   'tags-updated': 'Tags mis à jour.',
 }
 
@@ -29,6 +33,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   'not-approved': 'La ressource doit être validée pour être mise en avant.',
   'tag-invalid': 'Tag invalide.',
   'tag-exists': 'Ce tag existe déjà.',
+  'asset-invalid': 'Champs requis manquants ou invalides.',
 }
 
 const STATUS_PRIORITY = {
@@ -53,6 +58,36 @@ const parseBoolean = (value: FormDataEntryValue | null) => {
   if (['true', '1', 'yes', 'on'].includes(normalized)) return true
   if (['false', '0', 'no', 'off'].includes(normalized)) return false
   return null
+}
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0
+
+const parseOptionalString = (value: unknown) => (isNonEmptyString(value) ? value.trim() : null)
+
+const parsePrice = (value: unknown) => {
+  if (value === null || value === undefined || value === '') return null
+  const parsed = typeof value === 'number' ? value : Number.parseFloat(String(value))
+  if (!Number.isFinite(parsed) || parsed < 0) return null
+  return parsed
+}
+
+const parseLanguagesForm = (values: FormDataEntryValue[]) => {
+  const allowed: ResourceLanguage[] = ['FR', 'EN', 'OTHER']
+  const normalized = values
+    .map((value) => value.toString().trim().toUpperCase())
+    .filter((value) => value.length > 0)
+  if (normalized.some((value) => !allowed.includes(value as ResourceLanguage))) return null
+  return Array.from(new Set(normalized)) as ResourceLanguage[]
+}
+
+const isValidUrl = (value: string) => {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 
 const normalizeLanguages = (value: unknown): ResourceLanguage[] => {
@@ -89,13 +124,23 @@ const updateStatusAction = async (formData: FormData) => {
   }
 
   try {
-    await prisma.resourceSubmission.update({
+    const updated = await prisma.resourceSubmission.update({
       where: { id },
       data: {
         status,
         featured: status === 'REJECTED' ? false : existing.featured,
       },
+      select: {
+        id: true,
+        assetTitle: true,
+        assetUrl: true,
+        status: true,
+      },
     })
+
+    if (status === 'APPROVED' && existing.status !== 'APPROVED') {
+      await notifyResourcePublished(updated)
+    }
   } catch (error) {
     console.error('Impossible de mettre à jour la ressource', error)
     return redirectWithError('update-failed')
@@ -161,6 +206,162 @@ const deleteResourceAction = async (formData: FormData) => {
   return redirectWithStatus('deleted')
 }
 
+const createResourceAction = async (formData: FormData) => {
+  'use server'
+
+  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+
+  const submitterName = parseOptionalString(formData.get('submitterName'))
+  const submitterEmail = parseOptionalString(formData.get('submitterEmail'))
+  const submitterDiscord = parseOptionalString(formData.get('submitterDiscord'))
+  const assetTitle = parseOptionalString(formData.get('assetTitle'))
+  const creatorName = parseOptionalString(formData.get('creatorName'))
+  const assetType = parseOptionalString(formData.get('assetType'))
+  const assetUrl = parseOptionalString(formData.get('assetUrl'))
+  const description = parseOptionalString(formData.get('description'))
+  const previewImageUrl = parseOptionalString(formData.get('previewImageUrl'))
+  const rawPrice = formData.get('price')
+  const price = parsePrice(rawPrice)
+  const languages = parseLanguagesForm(formData.getAll('languages'))
+  const featured = parseBoolean(formData.get('featured')) ?? false
+
+  const requiredFields: Array<string | null> = [submitterName, assetTitle, creatorName, assetUrl]
+  if (requiredFields.some((value) => !value)) {
+    return redirectWithError('asset-invalid')
+  }
+
+  if (assetUrl && !isValidUrl(assetUrl)) {
+    return redirectWithError('asset-invalid')
+  }
+
+  if (previewImageUrl && !isValidUrl(previewImageUrl)) {
+    return redirectWithError('asset-invalid')
+  }
+
+  if (rawPrice !== null && rawPrice !== '' && price === null) {
+    return redirectWithError('asset-invalid')
+  }
+
+  if (languages === null) {
+    return redirectWithError('asset-invalid')
+  }
+
+  const tagIds = formData
+    .getAll('tagIds')
+    .map((value) => value.toString())
+    .filter((value) => value.length > 0)
+
+  try {
+    const created = await prisma.resourceSubmission.create({
+      data: {
+        submitterName: submitterName!,
+        submitterEmail,
+        submitterDiscord,
+        assetTitle: assetTitle!,
+        creatorName: creatorName!,
+        assetType,
+        assetUrl: assetUrl!,
+        description,
+        previewImageUrl,
+        price,
+        languages,
+        status: 'APPROVED',
+        featured,
+        ...(tagIds.length > 0
+          ? {
+              tags: {
+                connect: tagIds.map((tagId) => ({ id: tagId })),
+              },
+            }
+          : {}),
+      },
+      select: {
+        id: true,
+        assetTitle: true,
+        assetUrl: true,
+      },
+    })
+
+    await notifyResourcePublished(created)
+  } catch (error) {
+    console.error('Impossible de créer la ressource', error)
+    return redirectWithError('update-failed')
+  }
+
+  return redirectWithStatus('asset-created')
+}
+
+const updateResourceAction = async (formData: FormData) => {
+  'use server'
+
+  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+
+  const id = formData.get('id')?.toString()
+  if (!id) {
+    return redirectWithError('missing-id')
+  }
+
+  const assetTitle = parseOptionalString(formData.get('assetTitle'))
+  const creatorName = parseOptionalString(formData.get('creatorName'))
+  const assetType = parseOptionalString(formData.get('assetType'))
+  const assetUrl = parseOptionalString(formData.get('assetUrl'))
+  const description = parseOptionalString(formData.get('description'))
+  const previewImageUrl = parseOptionalString(formData.get('previewImageUrl'))
+  const rawPrice = formData.get('price')
+  const price = parsePrice(rawPrice)
+  const languages = parseLanguagesForm(formData.getAll('languages'))
+
+  const requiredFields: Array<string | null> = [assetTitle, creatorName, assetUrl]
+  if (requiredFields.some((value) => !value)) {
+    return redirectWithError('asset-invalid')
+  }
+
+  if (assetUrl && !isValidUrl(assetUrl)) {
+    return redirectWithError('asset-invalid')
+  }
+
+  if (previewImageUrl && !isValidUrl(previewImageUrl)) {
+    return redirectWithError('asset-invalid')
+  }
+
+  if (rawPrice !== null && rawPrice !== '' && price === null) {
+    return redirectWithError('asset-invalid')
+  }
+
+  if (languages === null) {
+    return redirectWithError('asset-invalid')
+  }
+
+  const tagIds = formData
+    .getAll('tagIds')
+    .map((value) => value.toString())
+    .filter((value) => value.length > 0)
+
+  try {
+    await prisma.resourceSubmission.update({
+      where: { id },
+      data: {
+        assetTitle: assetTitle!,
+        creatorName: creatorName!,
+        assetType,
+        assetUrl: assetUrl!,
+        description,
+        previewImageUrl,
+        price,
+        languages,
+        tags: {
+          set: tagIds.map((tagId) => ({ id: tagId })),
+        },
+      },
+    })
+  } catch (error) {
+    console.error('Impossible de mettre à jour la ressource', error)
+    return redirectWithError('update-failed')
+  }
+
+  return redirectWithStatus('asset-updated')
+}
+
 const createTagAction = async (formData: FormData) => {
   'use server'
 
@@ -211,6 +412,52 @@ const deleteTagAction = async (formData: FormData) => {
   }
 
   return redirectWithStatus('tag-deleted')
+}
+
+const updateTagAction = async (formData: FormData) => {
+  'use server'
+
+  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+
+  const id = formData.get('id')?.toString()
+  const label = formData.get('label')?.toString().trim() ?? ''
+  const slugInput = formData.get('slug')?.toString().trim() ?? ''
+
+  if (!id) {
+    return redirectWithError('missing-id')
+  }
+
+  const existing = await prisma.resourceTag.findUnique({ where: { id } })
+  if (!existing) {
+    return redirectWithError('not-found')
+  }
+
+  const nextLabel = label || existing.label
+  const nextSlug = slugInput || slugifyTagLabel(nextLabel)
+
+  if (!nextLabel || !nextSlug) {
+    return redirectWithError('tag-invalid')
+  }
+
+  const slugOwner = await prisma.resourceTag.findUnique({ where: { slug: nextSlug } })
+  if (slugOwner && slugOwner.id !== id) {
+    return redirectWithError('tag-exists')
+  }
+
+  try {
+    await prisma.resourceTag.update({
+      where: { id },
+      data: {
+        label: nextLabel,
+        slug: nextSlug,
+      },
+    })
+  } catch (error) {
+    console.error('Impossible de mettre à jour le tag', error)
+    return redirectWithError('update-failed')
+  }
+
+  return redirectWithStatus('tag-updated')
 }
 
 const updateTagsAction = async (formData: FormData) => {
@@ -345,8 +592,11 @@ export default async function AdminResourcesPage({ searchParams }: PageProps) {
         toggleFeaturedAction={toggleFeaturedAction}
         deleteAction={deleteResourceAction}
         updateTagsAction={updateTagsAction}
+        createResourceAction={createResourceAction}
+        updateResourceAction={updateResourceAction}
         createTagAction={createTagAction}
         deleteTagAction={deleteTagAction}
+        updateTagAction={updateTagAction}
       />
     </div>
   )

@@ -14,8 +14,11 @@ type ResourcesManagerProps = {
   toggleFeaturedAction: ServerAction
   deleteAction: ServerAction
   updateTagsAction: ServerAction
+  createResourceAction: ServerAction
+  updateResourceAction: ServerAction
   createTagAction: ServerAction
   deleteTagAction: ServerAction
+  updateTagAction: ServerAction
 }
 
 type ResourceStatusFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
@@ -66,18 +69,34 @@ const ResourcesManager = ({
   toggleFeaturedAction,
   deleteAction,
   updateTagsAction,
+  createResourceAction,
+  updateResourceAction,
   createTagAction,
   deleteTagAction,
+  updateTagAction,
 }: ResourcesManagerProps) => {
   const [statusFilter, setStatusFilter] = useState<ResourceStatusFilter>('ALL')
   const [languageFilter, setLanguageFilter] = useState<ResourceLanguageFilter>('ALL')
   const [tagFilter, setTagFilter] = useState<string[]>([])
   const [query, setQuery] = useState('')
   const [editingResourceId, setEditingResourceId] = useState<string | null>(null)
+  const [editingTagId, setEditingTagId] = useState<string | null>(null)
+  const [creatingResource, setCreatingResource] = useState(false)
+  const [editingResourceDetailsId, setEditingResourceDetailsId] = useState<string | null>(null)
 
   const editingResource = useMemo(
     () => resources.find((resource) => resource.id === editingResourceId) ?? null,
     [resources, editingResourceId],
+  )
+
+  const editingResourceDetails = useMemo(
+    () => resources.find((resource) => resource.id === editingResourceDetailsId) ?? null,
+    [resources, editingResourceDetailsId],
+  )
+
+  const editingTag = useMemo(
+    () => availableTags.find((tag) => tag.id === editingTagId) ?? null,
+    [availableTags, editingTagId],
   )
 
   const filteredResources = useMemo(() => {
@@ -111,6 +130,16 @@ const ResourcesManager = ({
 
   return (
     <section className={styles.manager}>
+      <div className={styles.createAssetBar}>
+        <div>
+          <h2>Ajouter un asset</h2>
+          <p>Publiez une ressource directement validée.</p>
+        </div>
+        <button type="button" className={styles.primaryButton} onClick={() => setCreatingResource(true)}>
+          Nouveau
+        </button>
+      </div>
+
       <div className={styles.tagsPanel}>
         <div className={styles.tagsHeader}>
           <div>
@@ -133,12 +162,21 @@ const ResourcesManager = ({
                 <span>{tag.label}</span>
                 <small>/{tag.slug}</small>
                 <small className={styles.tagCount}>{tag.approvedCount ?? 0} approuvée(s)</small>
-                <form action={deleteTagAction}>
-                  <input type="hidden" name="id" value={tag.id} />
-                  <button type="submit" className={styles.secondaryButton}>
-                    Supprimer
+                <div className={styles.tagActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => setEditingTagId(tag.id)}
+                  >
+                    Modifier
                   </button>
-                </form>
+                  <form action={deleteTagAction}>
+                    <input type="hidden" name="id" value={tag.id} />
+                    <button type="submit" className={styles.secondaryButton}>
+                      Supprimer
+                    </button>
+                  </form>
+                </div>
               </div>
             ))}
           </div>
@@ -287,6 +325,13 @@ const ResourcesManager = ({
                 </div>
 
                 <div className={styles.actions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => setEditingResourceDetailsId(resource.id)}
+                  >
+                    Modifier
+                  </button>
                   {!isApproved ? (
                     <form action={updateStatusAction}>
                       <input type="hidden" name="id" value={resource.id} />
@@ -370,6 +415,262 @@ const ResourcesManager = ({
                   className={styles.secondaryButton}
                   onClick={() => setEditingResourceId(null)}
                 >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {editingResourceDetails ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={() => setEditingResourceDetailsId(null)}>
+          <div className={styles.modalCard} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <header className={styles.modalHeader}>
+              <div>
+                <h3>Modifier la ressource</h3>
+                <p>Mettez à jour les informations de l&apos;asset.</p>
+              </div>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setEditingResourceDetailsId(null)}
+              >
+                Fermer
+              </button>
+            </header>
+            <form action={updateResourceAction} className={styles.modalBody}>
+              <input type="hidden" name="id" value={editingResourceDetails.id} />
+              <div className={styles.assetGrid}>
+                <label className={styles.modalField}>
+                  <span>Titre de l'asset</span>
+                  <input type="text" name="assetTitle" defaultValue={editingResourceDetails.assetTitle} required />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Créateur</span>
+                  <input type="text" name="creatorName" defaultValue={editingResourceDetails.creatorName} required />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Type</span>
+                  <input type="text" name="assetType" defaultValue={editingResourceDetails.assetType ?? ''} />
+                </label>
+                <label className={styles.modalField}>
+                  <span>URL de l'asset</span>
+                  <input type="url" name="assetUrl" defaultValue={editingResourceDetails.assetUrl} required />
+                </label>
+                <label className={styles.modalField}>
+                  <span>URL de l'aperçu</span>
+                  <input
+                    type="url"
+                    name="previewImageUrl"
+                    defaultValue={editingResourceDetails.previewImageUrl ?? ''}
+                  />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Prix (€)</span>
+                  <input
+                    type="number"
+                    name="price"
+                    min="0"
+                    step="0.01"
+                    defaultValue={editingResourceDetails.price ?? ''}
+                  />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Langues</span>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxItem}>
+                      <input
+                        type="checkbox"
+                        name="languages"
+                        value="FR"
+                        defaultChecked={editingResourceDetails.languages.includes('FR')}
+                      />
+                      FR
+                    </label>
+                    <label className={styles.checkboxItem}>
+                      <input
+                        type="checkbox"
+                        name="languages"
+                        value="EN"
+                        defaultChecked={editingResourceDetails.languages.includes('EN')}
+                      />
+                      EN
+                    </label>
+                    <label className={styles.checkboxItem}>
+                      <input
+                        type="checkbox"
+                        name="languages"
+                        value="OTHER"
+                        defaultChecked={editingResourceDetails.languages.includes('OTHER')}
+                      />
+                      Autre
+                    </label>
+                  </div>
+                </label>
+                <label className={styles.modalField}>
+                  <span>Tags</span>
+                  <select
+                    name="tagIds"
+                    multiple
+                    defaultValue={editingResourceDetails.tags.map((tag) => tag.id)}
+                    disabled={availableTags.length === 0}
+                  >
+                    {availableTags.map((tag) => (
+                      <option key={tag.id} value={tag.id}>
+                        {tag.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label className={styles.modalField}>
+                <span>Description</span>
+                <textarea
+                  name="description"
+                  rows={4}
+                  defaultValue={editingResourceDetails.description ?? ''}
+                  placeholder="Description (optionnel)"
+                ></textarea>
+              </label>
+              <div className={styles.modalActions}>
+                <button type="submit" className={styles.primaryButton}>
+                  Enregistrer
+                </button>
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => setEditingResourceDetailsId(null)}
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {creatingResource ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={() => setCreatingResource(false)}>
+          <div className={styles.modalCard} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <header className={styles.modalHeader}>
+              <div>
+                <h3>Nouvel asset</h3>
+                <p>Ajoutez une ressource directement validée.</p>
+              </div>
+              <button type="button" className={styles.secondaryButton} onClick={() => setCreatingResource(false)}>
+                Fermer
+              </button>
+            </header>
+            <form action={createResourceAction} className={styles.modalBody}>
+              <div className={styles.assetGrid}>
+                <label className={styles.modalField}>
+                  <span>Nom du soumetteur</span>
+                  <input type="text" name="submitterName" defaultValue="FRVtubers" readOnly required />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Titre de l'asset</span>
+                  <input type="text" name="assetTitle" required />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Créateur</span>
+                  <input type="text" name="creatorName" required />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Type</span>
+                  <input type="text" name="assetType" placeholder="Overlay, Emotes..." />
+                </label>
+                <label className={styles.modalField}>
+                  <span>URL de l'asset</span>
+                  <input type="url" name="assetUrl" placeholder="https://..." required />
+                </label>
+                <label className={styles.modalField}>
+                  <span>URL de l'aperçu</span>
+                  <input type="url" name="previewImageUrl" placeholder="https://..." />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Prix (€)</span>
+                  <input type="number" name="price" min="0" step="0.01" />
+                </label>
+                <label className={styles.modalField}>
+                  <span>Langues</span>
+                  <div className={styles.checkboxGroup}>
+                    <label className={styles.checkboxItem}>
+                      <input type="checkbox" name="languages" value="FR" />
+                      FR
+                    </label>
+                    <label className={styles.checkboxItem}>
+                      <input type="checkbox" name="languages" value="EN" />
+                      EN
+                    </label>
+                    <label className={styles.checkboxItem}>
+                      <input type="checkbox" name="languages" value="OTHER" />
+                      Autre
+                    </label>
+                  </div>
+                </label>
+                <label className={styles.modalField}>
+                  <span>Tags</span>
+                  <select name="tagIds" multiple disabled={availableTags.length === 0}>
+                    {availableTags.map((tag) => (
+                      <option key={tag.id} value={tag.id}>
+                        {tag.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={styles.modalField}>
+                  <span>Mettre en avant</span>
+                  <div className={styles.checkboxItem}>
+                    <input type="checkbox" name="featured" value="true" />
+                    Oui
+                  </div>
+                </label>
+              </div>
+              <label className={styles.modalField}>
+                <span>Description</span>
+                <textarea name="description" rows={4} placeholder="Description (optionnel)"></textarea>
+              </label>
+              <div className={styles.modalActions}>
+                <button type="submit" className={styles.primaryButton}>
+                  Créer
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={() => setCreatingResource(false)}>
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {editingTag ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={() => setEditingTagId(null)}>
+          <div className={styles.modalCard} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <header className={styles.modalHeader}>
+              <div>
+                <h3>Modifier le tag</h3>
+                <p>Changez le nom ou l&apos;URL associée.</p>
+              </div>
+              <button type="button" className={styles.secondaryButton} onClick={() => setEditingTagId(null)}>
+                Fermer
+              </button>
+            </header>
+            <form action={updateTagAction} className={styles.modalBody}>
+              <input type="hidden" name="id" value={editingTag.id} />
+              <label className={styles.modalField}>
+                <span>Nom du tag</span>
+                <input type="text" name="label" defaultValue={editingTag.label} required />
+              </label>
+              <label className={styles.modalField}>
+                <span>URL</span>
+                <input type="text" name="slug" defaultValue={editingTag.slug} required />
+              </label>
+              <div className={styles.modalActions}>
+                <button type="submit" className={styles.primaryButton}>
+                  Enregistrer
+                </button>
+                <button type="button" className={styles.secondaryButton} onClick={() => setEditingTagId(null)}>
                   Annuler
                 </button>
               </div>
