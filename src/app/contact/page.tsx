@@ -17,6 +17,7 @@ import SiteFooter from '@/components/home/SiteFooter'
 import BackToTopButton from '@/components/BackToTopButton'
 import { mainNavItems } from '@/lib/navigation'
 import styles from './page.module.scss'
+import ContactForm from '@/components/contact/ContactForm'
 
 export const metadata: Metadata = {
   title: 'Contact | FRVtubers',
@@ -66,25 +67,7 @@ const ContactPage = () => {
         <section className={styles.grid}>
           <div className={styles.card}>
             <h3>Formulaire de contact</h3>
-            <form className={styles.form}>
-              <label>
-                <span>Nom et prénom</span>
-                <input type="text" name="name" placeholder="Ton nom complet" required />
-              </label>
-              <label>
-                <span>Adresse e-mail</span>
-                <input type="email" name="email" placeholder="nom@domaine.com" required />
-              </label>
-              <label>
-                <span>Objet</span>
-                <input type="text" name="subject" placeholder="Sujet de ton message" required />
-              </label>
-              <label>
-                <span>Message</span>
-                <textarea name="message" rows={5} placeholder="Raconte-nous tout" required />
-              </label>
-              <button type="submit">Envoyer</button>
-            </form>
+            <ContactForm />
           </div>
 
           <div className={styles.card}>
