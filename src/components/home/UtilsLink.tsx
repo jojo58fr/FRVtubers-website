@@ -1,35 +1,49 @@
 'use client'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faVideo, faPalette, faBookOpen, faBoxOpen } from '@fortawesome/free-solid-svg-icons'
+import { faVideo, faPalette, faBookOpen, faBoxOpen, faMusic, faGrip } from '@fortawesome/free-solid-svg-icons'
 import styles from './UtilsLink.module.scss'
 
 const platforms = [
   {
     icon: faVideo,
-    label: 'FRV Stream',
+    label: 'FRVStream',
     description: 'Plateforme de streaming communautaire',
     href: 'https://stream.frvtubers.com',
     comingSoon: false,
   },
   {
     icon: faPalette,
-    label: 'FRV Art',
+    label: 'FRVArt',
     description: 'Galerie artistique de la communauté',
     href: 'https://art.frvtubers.com',
     comingSoon: false,
   },
   {
     icon: faBookOpen,
-    label: 'FRV Docs',
+    label: 'FRVDocs',
     description: 'Documentation et guides VTubing',
     href: 'https://docs.frvtubers.com',
     comingSoon: false,
   },
   {
+    icon: faGrip,
+    label: 'FRVBento',
+    description: 'Site type card/linktree/bento permettant la création de multi-liens. (Disponible uniquement pour les VtuberFR)',
+    href: 'https://bento.frvtubers.com',
+    comingSoon: false,
+  },
+  {
     icon: faBoxOpen,
-    label: 'FRV Ressources',
+    label: 'FRVRessources',
     description: 'Ressources gratuites et payantes pour VTubers FR',
+    href: '#',
+    comingSoon: true,
+  },
+  {
+    icon: faMusic,
+    label: 'FRVMusic',
+    description: 'Plateforme type Spotify pour les VSinger FR / Vtubers FR',
     href: '#',
     comingSoon: true,
   },
