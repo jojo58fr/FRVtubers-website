@@ -6,7 +6,7 @@ import SiteHeader from '../../../components/home/SiteHeader'
 import SiteFooter from '../../../components/home/SiteFooter'
 import BackToTopButton from '../../../components/BackToTopButton'
 import MagazineViewerWrapper from '../../../components/kokori/MagazineViewerWrapper'
-import { fetchMagazineBySlug, fetchPublishedMagazines } from '../../../lib/magazines'
+import { fetchMagazineBySlug } from '../../../lib/magazines'
 import { authOptions } from '../../api/auth/[...nextauth]/route'
 import styles from './page.module.scss'
 import { mainNavItems } from '@/lib/navigation'
@@ -25,12 +25,7 @@ const isPromise = <T,>(value: Promise<T> | T): value is Promise<T> =>
 const resolveParams = async (params: Promise<RouteParams> | RouteParams) =>
   isPromise(params) ? await params : params
 
-export async function generateStaticParams() {
-  const magazines = await fetchPublishedMagazines()
-  return magazines.map((magazine) => ({ slug: magazine.slug }))
-}
-
-export const revalidate = 120
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({
   params,
@@ -38,7 +33,7 @@ export async function generateMetadata({
   params: Promise<RouteParams> | RouteParams
 }): Promise<Metadata> {
   const { slug } = await resolveParams(params)
-  const magazine = await fetchMagazineBySlug(slug, { includeDrafts: true })
+  const magazine = await fetchMagazineBySlug(slug)
 
   if (!magazine) {
     return {
@@ -58,8 +53,6 @@ export async function generateMetadata({
     },
   }
 }
-
-export const dynamicParams = true
 
 export default async function KokoriMagazinePage({
   params,
