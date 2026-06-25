@@ -7,12 +7,15 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ChangeEvent,
   type PointerEvent as ReactPointerEvent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import HTMLFlipBook from 'react-pageflip'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
+  faChevronLeft,
+  faChevronRight,
   faCompress,
   faDownload,
   faExpand,
@@ -53,8 +56,10 @@ const MIN_SCALE = 0.6
 const MAX_SCALE = 5
 const SCALE_STEP = 0.2
 const MAX_PAGE_WIDTH = 680
+const FULLSCREEN_MAX_PAGE_WIDTH = 820
 const DOUBLE_PAGE_BREAKPOINT = 960
 const PREVIEW_WIDTH = 140
+const MAX_RENDER_DEVICE_PIXEL_RATIO = 8
 
 if (typeof window !== 'undefined') {
   if (typeof window.DOMMatrix === 'undefined') {
@@ -157,6 +162,8 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState<boolean>(false)
   const [previewState, setPreviewState] = useState<PreviewState | null>(null)
+  const [sliderDraftValue, setSliderDraftValue] = useState<number | null>(null)
+  const [isSliderPointerActive, setIsSliderPointerActive] = useState<boolean>(false)
 
   const panStateRef = useRef<{
     pointerId: number | null
@@ -247,6 +254,12 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
   }, [getFullscreenElement])
 
   useEffect(() => {
+    if (isFullscreen) {
+      setZoomMenuOpen(false)
+    }
+  }, [isFullscreen])
+
+  useEffect(() => {
     if (!zoomMenuOpen) {
       return
     }
@@ -303,19 +316,6 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     setZoomMenuOpen((value) => !value)
   }
 
-  const handleZoomIn = useCallback(() => {
-    setScale((value) => Math.min(MAX_SCALE, Math.round((value + SCALE_STEP) * 100) / 100))
-  }, [])
-
-  const handleZoomOut = useCallback(() => {
-    setScale((value) => Math.max(MIN_SCALE, Math.round((value - SCALE_STEP) * 100) / 100))
-  }, [])
-
-  const handleZoomReset = useCallback(() => {
-    setScale(1)
-    setPanOffset({ x: 0, y: 0 })
-  }, [])
-
   const toggleFullscreen = useCallback(() => {
     const element = viewerRef.current
 
@@ -369,7 +369,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
   }, [numPages])
 
   const layout = useMemo<LayoutDimensions>(() => {
-    if (containerWidth <= 0) {
+    if (containerWidth <= 0 || (isFullscreen && viewportSize.height <= 0)) {
       return {
         baseWidth: 0,
         baseHeight: 0,
@@ -381,12 +381,21 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
 
     const isDoubleLayout = containerWidth >= DOUBLE_PAGE_BREAKPOINT
     const columns = isDoubleLayout ? 2 : 1
-    const gutter = isDoubleLayout ? 96 : 32
+    const gutter = isDoubleLayout ? (isFullscreen ? 48 : 96) : isFullscreen ? 16 : 32
     const available = Math.max(containerWidth - gutter, 0)
     const rawBaseWidth = columns > 0 ? available / columns : available
-    let baseWidth = Math.min(MAX_PAGE_WIDTH, rawBaseWidth)
+    const maxPageWidth = isFullscreen ? FULLSCREEN_MAX_PAGE_WIDTH : MAX_PAGE_WIDTH
+    let baseWidth = Math.min(maxPageWidth, rawBaseWidth)
 
-    if (rawBaseWidth >= 260) {
+    if (isFullscreen) {
+      const availableHeight = Math.max(viewportSize.height, 0)
+      const maxWidthFromHeight = availableHeight / aspectRatio
+      baseWidth = Math.min(baseWidth, maxWidthFromHeight)
+
+      if (rawBaseWidth >= 260 && maxWidthFromHeight >= 260) {
+        baseWidth = Math.max(260, baseWidth)
+      }
+    } else if (rawBaseWidth >= 260) {
       baseWidth = Math.max(260, baseWidth)
     }
 
@@ -405,19 +414,36 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     const scaledHeight = Math.round(baseHeight * scale)
 
     return { baseWidth, baseHeight, scaledWidth, scaledHeight, isDoubleLayout }
-  }, [containerWidth, scale])
+  }, [containerWidth, isFullscreen, scale, viewportSize.height])
 
   const pageWidth = layout.baseWidth
   const pageHeight = layout.baseHeight
   const scaledWidth = layout.scaledWidth
   const scaledHeight = layout.scaledHeight
+  const isZoomedMode = scale > 1
+  const isMobileLayout = containerWidth > 0 && containerWidth <= 768
+  const defaultSpreadSize = layout.isDoubleLayout ? 2 : 1
 
   const canRenderBook =
-    !loadError && pageWidth > 0 && pageHeight > 0 && scaledWidth > 0 && scaledHeight > 0 && numPages > 0
+    !loadError &&
+    pageWidth > 0 &&
+    pageHeight > 0 &&
+    scaledWidth > 0 &&
+    scaledHeight > 0 &&
+    numPages > 0
 
   const totalEntries = pageEntries.length
   const totalPages = Math.max(numPages, 0)
+  const toolbarZoomPercent = useMemo(() => {
+    const ratio = (scale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)
+    return `${Math.min(100, Math.max(0, ratio * 100))}%`
+  }, [scale])
+  const pageRenderDevicePixelRatio = useMemo(() => {
+    const baseDevicePixelRatio =
+      typeof window !== 'undefined' && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1
 
+    return Math.min(MAX_RENDER_DEVICE_PIXEL_RATIO, baseDevicePixelRatio)
+  }, [])
   const getEntryIndexForPage = useCallback(
     (pageNumber: number) => {
       if (totalEntries === 0) {
@@ -437,18 +463,114 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     [numPages, pageEntries, totalEntries],
   )
 
+  const getSpreadStartIndex = useCallback(
+    (index: number) => {
+      if (totalEntries <= 0 || numPages <= 0) {
+        return 0
+      }
+
+      const maxRealPageIndex = Math.max(numPages - 1, 0)
+      const clamped = Math.max(0, Math.min(index, maxRealPageIndex))
+      if (!layout.isDoubleLayout) {
+        return clamped
+      }
+
+      if (clamped === 0) {
+        return 0
+      }
+
+      if (numPages % 2 === 0 && clamped === maxRealPageIndex) {
+        return maxRealPageIndex
+      }
+
+      return clamped % 2 === 0 ? clamped - 1 : clamped
+    },
+    [layout.isDoubleLayout, numPages, totalEntries],
+  )
+
+  const getSpreadPageIndices = useCallback(
+    (startIndex: number) => {
+      if (totalEntries <= 0 || numPages <= 0) {
+        return [] as number[]
+      }
+
+      const maxRealPageIndex = Math.max(numPages - 1, 0)
+      const normalizedStartIndex = getSpreadStartIndex(startIndex)
+
+      if (!layout.isDoubleLayout) {
+        return [normalizedStartIndex]
+      }
+
+      if (normalizedStartIndex === 0) {
+        return [0]
+      }
+
+      if (numPages % 2 === 0 && normalizedStartIndex === maxRealPageIndex) {
+        return [normalizedStartIndex]
+      }
+
+      const indices = [normalizedStartIndex]
+      if (normalizedStartIndex + 1 <= maxRealPageIndex) {
+        indices.push(normalizedStartIndex + 1)
+      }
+      return indices
+    },
+    [getSpreadStartIndex, layout.isDoubleLayout, numPages, totalEntries],
+  )
+
+  const getAdjacentSpreadStartIndex = useCallback(
+    (startIndex: number, direction: -1 | 1) => {
+      if (totalEntries <= 0 || numPages <= 0) {
+        return 0
+      }
+
+      const maxRealPageIndex = Math.max(numPages - 1, 0)
+      const normalizedStartIndex = getSpreadStartIndex(startIndex)
+
+      if (!layout.isDoubleLayout) {
+        return Math.max(0, Math.min(normalizedStartIndex + direction, maxRealPageIndex))
+      }
+
+      if (direction > 0) {
+        if (normalizedStartIndex === 0) {
+          return numPages > 1 ? 1 : 0
+        }
+
+        const nextStartIndex = normalizedStartIndex + 2
+        return nextStartIndex > maxRealPageIndex ? normalizedStartIndex : nextStartIndex
+      }
+
+      if (normalizedStartIndex <= 1) {
+        return 0
+      }
+
+      return normalizedStartIndex - 2
+    },
+    [getSpreadStartIndex, layout.isDoubleLayout, numPages, totalEntries],
+  )
+
+  const currentSpreadStartIndex = getSpreadStartIndex(currentEntryIndex)
+
   const currentPageNumber = useMemo(() => {
-    const entry = pageEntries[currentEntryIndex]
+    const entry = pageEntries[currentSpreadStartIndex]
     if (entry?.pageNumber) {
       return entry.pageNumber
     }
     return totalPages > 0 ? totalPages : 1
-  }, [currentEntryIndex, pageEntries, totalPages])
+  }, [currentSpreadStartIndex, pageEntries, totalPages])
+  const currentZoomEntries = useMemo(
+    () => getSpreadPageIndices(currentSpreadStartIndex).map((pageIndex) => pageEntries[pageIndex]).filter(Boolean),
+    [currentSpreadStartIndex, getSpreadPageIndices, pageEntries],
+  )
+  const currentVisibleSpreadSize = currentZoomEntries.length > 0 ? currentZoomEntries.length : defaultSpreadSize
 
   const baseContentWidth = useMemo(() => {
-    const views = layout.isDoubleLayout ? 2 : 1
-    return layout.baseWidth * views
-  }, [layout.baseWidth, layout.isDoubleLayout])
+    if (isZoomedMode) {
+      return layout.baseWidth * currentVisibleSpreadSize
+    }
+
+    return layout.baseWidth * defaultSpreadSize
+  }, [currentVisibleSpreadSize, defaultSpreadSize, isZoomedMode, layout.baseWidth])
 
   const baseContentHeight = layout.baseHeight
   const scaledContentWidth = baseContentWidth * scale
@@ -462,6 +584,21 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     const ratio = currentZeroBased / (totalPages - 1)
     return Math.min(100, Math.max(0, Number.isFinite(ratio) ? ratio * 100 : 0))
   }, [currentPageNumber, totalPages])
+  const currentSliderValue = useMemo(
+    () => Math.min(Math.max(currentPageNumber - 1, 0), Math.max(totalPages - 1, 0)),
+    [currentPageNumber, totalPages],
+  )
+  const displayedSliderValue = sliderDraftValue ?? currentSliderValue
+  const toolbarPageLabel = useMemo(() => {
+    const safeCurrentPage = Math.min(Math.max(currentPageNumber, 1), Math.max(totalPages, 1))
+    const safeTotalPages = Math.max(totalPages, 1)
+
+    if (isMobileLayout) {
+      return `${safeCurrentPage}/${safeTotalPages}`
+    }
+
+    return `Page ${safeCurrentPage} / ${safeTotalPages}`
+  }, [currentPageNumber, isMobileLayout, totalPages])
 
   const clampOffset = useCallback(
     (nextX: number, nextY: number) => {
@@ -530,6 +667,112 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     }
   }, [scale])
 
+  const navigatePageFlipTo = useCallback((targetPageZero: number) => {
+    const instance = flipBookRef.current?.pageFlip?.()
+    if (!instance) {
+      return false
+    }
+
+    const attempts: Array<(pageIndex: number) => void> = []
+
+    if (typeof instance.turnToPage === 'function') {
+      attempts.push((pageIndex) => instance.turnToPage(pageIndex))
+    }
+
+    if (typeof instance.turnToPageIndex === 'function') {
+      attempts.push((pageIndex) => instance.turnToPageIndex(pageIndex))
+    }
+
+    if (typeof instance.goToPage === 'function') {
+      attempts.push((pageIndex) => instance.goToPage(pageIndex))
+    }
+
+    if (typeof instance.flip === 'function') {
+      attempts.push((pageIndex) => instance.flip(pageIndex))
+      attempts.push((pageIndex) => instance.flip({ page: pageIndex }))
+    }
+
+    for (const attempt of attempts) {
+      try {
+        attempt(targetPageZero)
+        return true
+      } catch {
+        continue
+      }
+    }
+
+    return false
+  }, [])
+
+  const stepPageFlip = useCallback((methodNames: string[]) => {
+    const pageFlipInstance = flipBookRef.current?.pageFlip?.()
+    if (!pageFlipInstance) {
+      return false
+    }
+
+    const instance = pageFlipInstance as Record<string, unknown>
+
+    for (const methodName of methodNames) {
+      const method = instance[methodName]
+      if (typeof method === 'function') {
+        ;(method as (...args: unknown[]) => void).call(pageFlipInstance)
+        return true
+      }
+    }
+
+    return false
+  }, [])
+
+  const syncCurrentEntryWithVisiblePage = useCallback(() => {
+    if (isZoomedMode || totalEntries === 0 || !pdfDocument) {
+      return
+    }
+
+    const visiblePageIndex = flipBookRef.current?.pageFlip?.()?.getCurrentPageIndex?.()
+    if (typeof visiblePageIndex !== 'number') {
+      return
+    }
+
+    const entryIndex = getEntryIndexForPage(visiblePageIndex + 1)
+    const normalizedEntryIndex = getSpreadStartIndex(entryIndex)
+
+    setCurrentEntryIndex((current) => {
+      if (current === normalizedEntryIndex) {
+        return current
+      }
+      return normalizedEntryIndex
+    })
+  }, [getEntryIndexForPage, getSpreadStartIndex, isZoomedMode, pdfDocument, totalEntries])
+
+  const handleZoomIn = useCallback(() => {
+    syncCurrentEntryWithVisiblePage()
+    setScale((value) => Math.min(MAX_SCALE, Math.round((value + SCALE_STEP) * 100) / 100))
+  }, [syncCurrentEntryWithVisiblePage])
+
+  const handleZoomOut = useCallback(() => {
+    syncCurrentEntryWithVisiblePage()
+    setScale((value) => Math.max(MIN_SCALE, Math.round((value - SCALE_STEP) * 100) / 100))
+  }, [syncCurrentEntryWithVisiblePage])
+
+  const handleZoomReset = useCallback(() => {
+    syncCurrentEntryWithVisiblePage()
+    setScale(1)
+    setPanOffset({ x: 0, y: 0 })
+  }, [syncCurrentEntryWithVisiblePage])
+
+  const handleZoomSliderChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const nextScale = Number.parseFloat(event.target.value)
+      if (!Number.isFinite(nextScale)) {
+        return
+      }
+
+      syncCurrentEntryWithVisiblePage()
+      setScale(Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(nextScale * 100) / 100)))
+    },
+    [syncCurrentEntryWithVisiblePage],
+  )
+
   const goToEntryIndex = useCallback(
     (targetIndex: number) => {
       if (totalEntries === 0 || !pdfDocument) {
@@ -538,12 +781,21 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
       }
 
       const clamped = Math.max(0, Math.min(targetIndex, totalEntries - 1))
-      if (clamped === currentEntryIndex) {
+      const normalizedTargetIndex = getSpreadStartIndex(clamped)
+      if (normalizedTargetIndex === currentSpreadStartIndex) {
         pendingPageRef.current = null
         return
       }
 
-      const entry = pageEntries[clamped]
+      if (isZoomedMode) {
+        setCurrentEntryIndex(normalizedTargetIndex)
+        setPanOffset({ x: 0, y: 0 })
+        setPreviewState(null)
+        pendingPageRef.current = null
+        return
+      }
+
+      const entry = pageEntries[normalizedTargetIndex]
       const targetPageNumber = entry?.pageNumber ?? numPages
       let targetPageZero = Math.max(
         0,
@@ -551,59 +803,82 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
       )
 
       if (layout.isDoubleLayout) {
-        targetPageZero = Math.max(0, Math.floor(targetPageZero / 2) * 2)
+        targetPageZero = getSpreadStartIndex(targetPageZero)
       }
 
       const resultingEntryIndex = getEntryIndexForPage(targetPageZero + 1)
-      if (resultingEntryIndex === currentEntryIndex) {
+      const normalizedResultingEntryIndex = getSpreadStartIndex(resultingEntryIndex)
+      if (normalizedResultingEntryIndex === currentSpreadStartIndex) {
         pendingPageRef.current = null
         return
       }
 
-      setCurrentEntryIndex(resultingEntryIndex)
+      setCurrentEntryIndex(normalizedResultingEntryIndex)
       setPanOffset({ x: 0, y: 0 })
       setPreviewState(null)
       pendingPageRef.current = targetPageZero
 
-      const instance = flipBookRef.current?.pageFlip?.()
-      if (!instance) {
+      if (!navigatePageFlipTo(targetPageZero)) {
         pendingPageRef.current = null
+      }
+    },
+    [
+      currentSpreadStartIndex,
+      getSpreadStartIndex,
+      getEntryIndexForPage,
+      isZoomedMode,
+      layout.isDoubleLayout,
+      navigatePageFlipTo,
+      numPages,
+      pageEntries,
+      pdfDocument,
+      totalEntries,
+    ],
+  )
+
+  const goToRelativeEntry = useCallback(
+    (offset: number) => {
+      if (totalEntries === 0) {
         return
       }
 
-      const attempts: Array<(pageIndex: number) => void> = []
+      const direction = offset >= 0 ? 1 : -1
+      let nextIndex = currentSpreadStartIndex
 
-      if (typeof instance.flip === 'function') {
-        attempts.push((pageIndex) => instance.flip(pageIndex))
-        attempts.push((pageIndex) => instance.flip({ page: pageIndex }))
+      for (let step = 0; step < Math.abs(offset); step += 1) {
+        nextIndex = getAdjacentSpreadStartIndex(nextIndex, direction)
       }
 
-      if (typeof instance.turnToPage === 'function') {
-        attempts.push((pageIndex) => instance.turnToPage(pageIndex))
-        attempts.push((pageIndex) => instance.turnToPage({ page: pageIndex }))
+      if (nextIndex === currentSpreadStartIndex) {
+        return
       }
 
-      if (typeof instance.turnToPageIndex === 'function') {
-        attempts.push((pageIndex) => instance.turnToPageIndex(pageIndex))
-      }
-
-      if (typeof instance.goToPage === 'function') {
-        attempts.push((pageIndex) => instance.goToPage(pageIndex))
-      }
-
-      for (const attempt of attempts) {
-        try {
-          attempt(targetPageZero)
-          return
-        } catch {
-          continue
-        }
-      }
-
-      pendingPageRef.current = null
+      goToEntryIndex(nextIndex)
     },
-    [currentEntryIndex, getEntryIndexForPage, layout.isDoubleLayout, numPages, pageEntries, pdfDocument, totalEntries],
+    [currentSpreadStartIndex, getAdjacentSpreadStartIndex, goToEntryIndex, totalEntries],
   )
+
+  const canGoToPreviousSpread = currentSpreadStartIndex > 0
+  const nextSpreadStartIndex = getAdjacentSpreadStartIndex(currentSpreadStartIndex, 1)
+  const canGoToNextSpread = nextSpreadStartIndex !== currentSpreadStartIndex
+
+  const handleGoToPrevious = useCallback(() => {
+    if (isZoomedMode) {
+      goToRelativeEntry(-1)
+      return
+    }
+
+    stepPageFlip(['flipPrev', 'turnToPrev', 'prev'])
+  }, [goToRelativeEntry, isZoomedMode, stepPageFlip])
+
+  const handleGoToNext = useCallback(() => {
+    if (isZoomedMode) {
+      goToRelativeEntry(1)
+      return
+    }
+
+    stepPageFlip(['flipNext', 'turnToNext', 'next'])
+  }, [goToRelativeEntry, isZoomedMode, stepPageFlip])
 
   const updatePreviewForIndex = useCallback(
     (index: number) => {
@@ -786,6 +1061,87 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     [getEntryIndexForPage, goToEntryIndex],
   )
 
+  const updateSliderDraft = useCallback(
+    (value: number) => {
+      const safeValue = Math.max(0, Math.min(value, Math.max(totalPages - 1, 0)))
+      setSliderDraftValue(safeValue)
+
+      const entryIndex = getEntryIndexForPage(safeValue + 1)
+      updatePreviewForIndex(entryIndex)
+    },
+    [getEntryIndexForPage, totalPages, updatePreviewForIndex],
+  )
+
+  const commitSliderValue = useCallback(
+    (value: number) => {
+      const safeValue = Math.max(0, Math.min(value, Math.max(totalPages - 1, 0)))
+      setSliderDraftValue(null)
+      setIsSliderPointerActive(false)
+      clearPreview()
+      handleSliderChange(safeValue)
+    },
+    [clearPreview, handleSliderChange, totalPages],
+  )
+
+  const handleSliderPointerDown = useCallback(
+    () => {
+      setIsSliderPointerActive(true)
+    },
+    [],
+  )
+
+  const handleSliderInput = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const nextValue = Number.parseInt(event.currentTarget.value, 10)
+      if (Number.isNaN(nextValue)) {
+        return
+      }
+
+      if (isSliderPointerActive) {
+        updateSliderDraft(nextValue)
+        handleSliderChange(nextValue)
+        return
+      }
+
+      handleSliderChange(nextValue)
+    },
+    [handleSliderChange, isSliderPointerActive, updateSliderDraft],
+  )
+
+  const handleSliderPointerUp = useCallback(
+    (event: ReactPointerEvent<HTMLInputElement>) => {
+      if (!isSliderPointerActive) {
+        return
+      }
+
+      const nextValue = Number.parseInt(event.currentTarget.value, 10)
+      if (Number.isNaN(nextValue)) {
+        setSliderDraftValue(null)
+        setIsSliderPointerActive(false)
+        clearPreview()
+        return
+      }
+
+      commitSliderValue(nextValue)
+    },
+    [clearPreview, commitSliderValue, isSliderPointerActive],
+  )
+
+  const handleSliderPointerCancel = useCallback(() => {
+    setSliderDraftValue(null)
+    setIsSliderPointerActive(false)
+    clearPreview()
+  }, [clearPreview])
+
+  const handleSliderBlur = useCallback(() => {
+    if (sliderDraftValue !== null) {
+      commitSliderValue(sliderDraftValue)
+      return
+    }
+
+    clearPreview()
+  }, [clearPreview, commitSliderValue, sliderDraftValue])
+
   const handleTrackPointerMove = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       if (!['mouse', 'pen', 'touch'].includes(event.pointerType)) {
@@ -798,16 +1154,9 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
       if (targetIndex === null) {
         return
       }
-      if (event.type === 'pointerdown') {
-        const entry = pageEntries[targetIndex]
-        const targetPageNumber = entry?.pageNumber ?? numPages
-        if (targetPageNumber && numPages > 0) {
-          handleSliderChange(Math.max(targetPageNumber - 1, 0))
-        }
-      }
       updatePreviewForIndex(targetIndex)
     },
-    [getIndexFromClientX, handleSliderChange, numPages, pageEntries, pdfDocument, totalPages, updatePreviewForIndex],
+    [getIndexFromClientX, pdfDocument, totalPages, updatePreviewForIndex],
   )
 
   const handleTrackPointerLeave = useCallback(() => {
@@ -832,34 +1181,24 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
         return
       }
 
-      const pageFlipInstance = flipBookRef.current?.pageFlip?.()
-
-      const tryInvokeFlip = (methodNames: string[]) => {
-        if (!pageFlipInstance) {
-          return false
-        }
-
-        const instance = pageFlipInstance as Record<string, unknown>
-
-        for (const methodName of methodNames) {
-          const method = instance[methodName]
-          if (typeof method === 'function') {
-            ;(method as (...args: unknown[]) => void).call(pageFlipInstance)
-            return true
-          }
-        }
-
-        return false
-      }
-
       switch (event.key) {
         case 'ArrowRight':
-          if (tryInvokeFlip(['flipNext', 'turnToNext', 'next'])) {
+          if (isZoomedMode) {
+            goToRelativeEntry(1)
+            event.preventDefault()
+            break
+          }
+          if (stepPageFlip(['flipNext', 'turnToNext', 'next'])) {
             event.preventDefault()
           }
           break
         case 'ArrowLeft':
-          if (tryInvokeFlip(['flipPrev', 'turnToPrev', 'prev'])) {
+          if (isZoomedMode) {
+            goToRelativeEntry(-1)
+            event.preventDefault()
+            break
+          }
+          if (stepPageFlip(['flipPrev', 'turnToPrev', 'prev'])) {
             event.preventDefault()
           }
           break
@@ -886,7 +1225,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
           break
       }
     },
-    [handleZoomIn, handleZoomOut, handleZoomReset, scale],
+    [goToRelativeEntry, handleZoomIn, handleZoomOut, handleZoomReset, isZoomedMode, scale, stepPageFlip],
   )
 
   const handleFlip = useCallback(
@@ -909,9 +1248,9 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
       }
 
       const entryIndex = getEntryIndexForPage(pageIndex + 1)
-      setCurrentEntryIndex(entryIndex)
+      setCurrentEntryIndex(getSpreadStartIndex(entryIndex))
     },
-    [getEntryIndexForPage],
+    [getEntryIndexForPage, getSpreadStartIndex],
   )
 
   const handleInit = useCallback(
@@ -921,9 +1260,9 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
 
       pendingPageRef.current = null
       const entryIndex = getEntryIndexForPage(initialPageIndex + 1)
-      setCurrentEntryIndex(entryIndex)
+      setCurrentEntryIndex(getSpreadStartIndex(entryIndex))
     },
-    [getEntryIndexForPage],
+    [getEntryIndexForPage, getSpreadStartIndex],
   )
 
   const flipContainerStyle = useMemo<CSSProperties | undefined>(() => {
@@ -938,11 +1277,40 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
       minWidth: `${baseContentWidth}px`,
       height: `${baseContentHeight}px`,
       minHeight: `${baseContentHeight}px`,
-      transform: `translate3d(${panOffset.x}px, ${panOffset.y}px, 0) scale(${scale})`,
+      transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${scale})`,
       transformOrigin: 'center center',
       transition,
     }
   }, [baseContentHeight, baseContentWidth, isPanning, panOffset.x, panOffset.y, scale])
+  const zoomReaderStyle = useMemo<CSSProperties | undefined>(() => {
+    if (scaledContentWidth <= 0 || scaledContentHeight <= 0) {
+      return undefined
+    }
+
+    const transition = isPanning ? 'transform 0s' : 'transform 0.18s ease'
+
+    return {
+      width: `${scaledContentWidth}px`,
+      minWidth: `${scaledContentWidth}px`,
+      height: `${scaledContentHeight}px`,
+      minHeight: `${scaledContentHeight}px`,
+      transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+      transformOrigin: 'center center',
+      transition,
+    }
+  }, [isPanning, panOffset.x, panOffset.y, scaledContentHeight, scaledContentWidth])
+  const zoomPageStyle = useMemo<CSSProperties | undefined>(() => {
+    if (scaledWidth <= 0 || scaledHeight <= 0) {
+      return undefined
+    }
+
+    return {
+      width: `${scaledWidth}px`,
+      minWidth: `${scaledWidth}px`,
+      height: `${scaledHeight}px`,
+      minHeight: `${scaledHeight}px`,
+    }
+  }, [scaledHeight, scaledWidth])
 
   const flipContainerClassName = useMemo(() => {
     const classes = [styles.flipContainer]
@@ -970,6 +1338,39 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     }
   }, [pageHeight, pageWidth])
 
+  useEffect(() => {
+    if (!layout.isDoubleLayout) {
+      return
+    }
+
+    const normalizedIndex = getSpreadStartIndex(currentEntryIndex)
+    if (normalizedIndex === currentEntryIndex) {
+      return
+    }
+
+    setCurrentEntryIndex(normalizedIndex)
+  }, [currentEntryIndex, getSpreadStartIndex, layout.isDoubleLayout])
+
+  useEffect(() => {
+    if (isZoomedMode || totalEntries === 0 || !pdfDocument) {
+      return
+    }
+
+    const targetPageZero = layout.isDoubleLayout
+      ? currentSpreadStartIndex
+      : Math.max(currentPageNumber - 1, 0)
+
+    const currentPageZero = flipBookRef.current?.pageFlip?.()?.getCurrentPageIndex?.()
+    if (typeof currentPageZero === 'number' && currentPageZero === targetPageZero) {
+      return
+    }
+
+    pendingPageRef.current = targetPageZero
+    if (!navigatePageFlipTo(targetPageZero)) {
+      pendingPageRef.current = null
+    }
+  }, [currentPageNumber, currentSpreadStartIndex, isZoomedMode, layout.isDoubleLayout, navigatePageFlipTo, pdfDocument, totalEntries])
+
   return (
     <div
       className={`${styles.viewer} ${isFullscreen ? styles.viewerFullscreen : ''}`}
@@ -985,29 +1386,8 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
 
         <div className={styles.toolbarDivider} />
 
-        <div className={styles.toolbarGroup} ref={zoomMenuRef}>
-          <button
-            type="button"
-            className={styles.toolbarButton}
-            onClick={toggleZoomMenu}
-            aria-haspopup="true"
-            aria-expanded={zoomMenuOpen}
-            aria-label="Options de zoom"
-          >
-            <FontAwesomeIcon icon={faMagnifyingGlass} />
-          </button>
-          <span className={styles.zoomLevel}>{Math.round(scale * 100)}%</span>
-
-          <div className={`${styles.zoomMenu} ${zoomMenuOpen ? styles.zoomMenuOpen : ''}`}>
-            <button
-              type="button"
-              className={styles.toolbarButton}
-              onClick={handleZoomOut}
-              disabled={scale <= MIN_SCALE}
-              aria-label="Zoom arriere"
-            >
-              <FontAwesomeIcon icon={faMagnifyingGlassMinus} />
-            </button>
+        {isFullscreen ? (
+          <div className={`${styles.toolbarGroup} ${styles.toolbarZoomControls}`}>
             <button
               type="button"
               className={styles.toolbarButton}
@@ -1017,16 +1397,90 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
             >
               <FontAwesomeIcon icon={faRotateRight} />
             </button>
+          </div>
+        ) : (
+          <div className={`${styles.toolbarGroup} ${styles.toolbarZoomControls}`} ref={zoomMenuRef}>
             <button
               type="button"
               className={styles.toolbarButton}
-              onClick={handleZoomIn}
-              disabled={scale >= MAX_SCALE}
-              aria-label="Zoom avant"
+              onClick={toggleZoomMenu}
+              aria-haspopup="true"
+              aria-expanded={zoomMenuOpen}
+              aria-label="Options de zoom"
             >
-              <FontAwesomeIcon icon={faMagnifyingGlassPlus} />
+              <FontAwesomeIcon icon={faMagnifyingGlass} />
             </button>
+            <span className={styles.zoomLevel}>{Math.round(scale * 100)}%</span>
+
+            <div className={`${styles.zoomMenu} ${zoomMenuOpen ? styles.zoomMenuOpen : ''}`}>
+              <button
+                type="button"
+                className={styles.toolbarButton}
+                onClick={handleZoomOut}
+                disabled={scale <= MIN_SCALE}
+                aria-label="Zoom arriere"
+              >
+                <FontAwesomeIcon icon={faMagnifyingGlassMinus} />
+              </button>
+              <button
+                type="button"
+                className={styles.toolbarButton}
+                onClick={handleZoomReset}
+                disabled={Math.abs(scale - 1) < 0.001}
+                aria-label="Reinitialiser le zoom"
+              >
+                <FontAwesomeIcon icon={faRotateRight} />
+              </button>
+              <button
+                type="button"
+                className={styles.toolbarButton}
+                onClick={handleZoomIn}
+                disabled={scale >= MAX_SCALE}
+                aria-label="Zoom avant"
+              >
+                <FontAwesomeIcon icon={faMagnifyingGlassPlus} />
+              </button>
+            </div>
           </div>
+        )}
+
+        {isFullscreen ? (
+          <div className={styles.toolbarZoomSliderGroup}>
+            <input
+              type="range"
+              min={MIN_SCALE}
+              max={MAX_SCALE}
+              step={0.1}
+              value={scale}
+              onChange={handleZoomSliderChange}
+              className={styles.toolbarZoomSlider}
+              style={{ '--toolbar-progress': toolbarZoomPercent } as CSSProperties}
+              aria-label="Zoom du magazine"
+            />
+            <span className={styles.toolbarZoomSliderValue}>{Math.round(scale * 100)}%</span>
+          </div>
+        ) : null}
+
+        <div className={`${styles.toolbarGroup} ${styles.toolbarNavigationGroup}`}>
+          <button
+            type="button"
+            className={styles.toolbarButton}
+            onClick={handleGoToPrevious}
+            disabled={!canGoToPreviousSpread}
+            aria-label="Page precedente"
+          >
+            <FontAwesomeIcon icon={faChevronLeft} />
+          </button>
+          <button
+            type="button"
+            className={styles.toolbarButton}
+            onClick={handleGoToNext}
+            disabled={!canGoToNextSpread}
+            aria-label="Page suivante"
+          >
+            <FontAwesomeIcon icon={faChevronRight} />
+          </button>
+          <span className={styles.toolbarPageIndicator}>{toolbarPageLabel}</span>
         </div>
 
         <div className={styles.toolbarSpacer} />
@@ -1056,118 +1510,171 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
           options={documentOptions}
         >
           {loadError ? null : canRenderBook ? (
-            <div
-              className={flipContainerClassName}
-              style={flipContainerStyle}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerCancel}
-            >
-              <HTMLFlipBook
-                ref={flipBookRef}
-                width={pageWidth}
-                height={pageHeight}
-                size="fixed"
-                startPage={0}
-                minWidth={0}
-                maxWidth={pageWidth}
-                minHeight={0}
-                maxHeight={pageHeight}
-                drawShadow
-                startZIndex={0}
-                autoSize
-                clickEventForward
-                useMouseEvents
-                swipeDistance={30}
-                showPageCorners
-                disableFlipByClick
-                showCover
-                className={styles.flipBook}
-                flippingTime={750}
-                maxShadowOpacity={0.4}
-                mobileScrollSupport
-                usePortrait
-                style={{}}
-                onFlip={handleFlip}
-                onInit={handleInit}
+            isZoomedMode ? (
+              <div
+                className={`${flipContainerClassName} ${styles.zoomReader}`}
+                style={zoomReaderStyle}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
               >
-                {pageEntries.map(({ pageNumber, index }) =>
-                  pageNumber ? (
-                    <div key={`page-${pageNumber}`} className={styles.flipPage} data-page={pageNumber}>
-                      <Page
-                        pageNumber={pageNumber}
-                        width={pageWidth}
-                        renderTextLayer={false}
-                        renderAnnotationLayer={false}
+                <div className={styles.zoomSpread}>
+                  {currentZoomEntries.map(({ pageNumber, index }) =>
+                    pageNumber ? (
+                      <div
+                        key={`zoom-page-${pageNumber}`}
+                        className={`${styles.flipPage} ${styles.zoomPage}`}
+                        data-page={pageNumber}
+                        style={zoomPageStyle}
+                      >
+                        <Page
+                          pageNumber={pageNumber}
+                          width={scaledWidth}
+                          devicePixelRatio={pageRenderDevicePixelRatio}
+                          loading={null}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        key={`zoom-blank-${currentSpreadStartIndex + index}`}
+                        className={`${styles.flipPage} ${styles.blankPage} ${styles.zoomPage}`}
+                        style={zoomPageStyle}
                       />
-                    </div>
-                  ) : (
-                    <div key={`blank-${index}`} className={`${styles.flipPage} ${styles.blankPage}`} />
-                  ),
-                )}
-              </HTMLFlipBook>
-            </div>
+                    ),
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div
+                className={flipContainerClassName}
+                style={flipContainerStyle}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
+              >
+                <HTMLFlipBook
+                  ref={flipBookRef}
+                  width={pageWidth}
+                  height={pageHeight}
+                  size="fixed"
+                  startPage={currentSpreadStartIndex}
+                  minWidth={0}
+                  maxWidth={pageWidth}
+                  minHeight={0}
+                  maxHeight={pageHeight}
+                  drawShadow
+                  startZIndex={0}
+                  autoSize
+                  clickEventForward
+                  useMouseEvents
+                  swipeDistance={30}
+                  showPageCorners
+                  disableFlipByClick
+                  showCover
+                  className={styles.flipBook}
+                  flippingTime={750}
+                  maxShadowOpacity={0.4}
+                  mobileScrollSupport
+                  usePortrait
+                  style={{}}
+                  onFlip={handleFlip}
+                  onInit={handleInit}
+                >
+                  {pageEntries.map(({ pageNumber, index }) =>
+                    pageNumber ? (
+                      <div key={`page-${pageNumber}`} className={styles.flipPage} data-page={pageNumber}>
+                        <Page
+                          pageNumber={pageNumber}
+                          width={pageWidth}
+                          devicePixelRatio={pageRenderDevicePixelRatio}
+                          loading={null}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                        />
+                      </div>
+                    ) : (
+                      <div key={`blank-${index}`} className={`${styles.flipPage} ${styles.blankPage}`} />
+                    ),
+                  )}
+                </HTMLFlipBook>
+              </div>
+            )
           ) : (
             <div className={styles.placeholder}>Chargement du magazine...</div>
           )}
         </Document>
         {canRenderBook ? (
           <div className={styles.progressBar}>
-            <div
-              className={styles.sliderWrapper}
-              ref={progressRef}
-              onPointerMove={handleTrackPointerMove}
-              onPointerLeave={handleTrackPointerLeave}
-              onPointerDown={handleTrackPointerMove}
-              onPointerUp={handleTrackPointerLeave}
-              onPointerCancel={handleTrackPointerLeave}
-            >
-              <input
-                type="range"
-                min={0}
-                max={Math.max(totalPages - 1, 0)}
-                value={Math.min(Math.max(currentPageNumber - 1, 0), Math.max(totalPages - 1, 0))}
-                step={1}
-                onChange={(event) => {
-                  const targetValue = Number.parseInt(event.target.value, 10)
-                  if (!Number.isNaN(targetValue)) {
-                    handleSliderChange(targetValue)
-                  }
-                }}
-                onInput={(event) => {
-                  const targetValue = Number.parseInt((event.target as HTMLInputElement).value, 10)
-                  if (!Number.isNaN(targetValue)) {
-                    handleSliderChange(targetValue)
-                  }
-                }}
-                onFocus={() => handleNodeEnter(currentEntryIndex)}
-                onBlur={handleNodeLeave}
-                className={styles.sliderInput}
-                style={{ '--progress': `${progressFillPercent}%` } as CSSProperties}
-                disabled={totalPages <= 1}
-                aria-label="Naviguer dans le magazine"
-              />
-              {previewState && pdfDocument ? (
-                <div className={styles.progressPreview} style={{ left: `${previewState.leftPercent}%` }}>
-                  {previewState.pageNumber ? (
-                    <div className={styles.progressPreviewPage}>
-                      <Page
-                        pageNumber={previewState.pageNumber}
-                        pdf={pdfDocument}
-                        width={PREVIEW_WIDTH}
-                        renderTextLayer={false}
-                        renderAnnotationLayer={false}
-                        onLoadError={() => setPreviewState(null)}
-                        onRenderError={() => setPreviewState(null)}
-                      />
-                    </div>
-                  ) : (
-                    <div className={styles.progressPreviewBlank}>Page blanche</div>
-                  )}
-                  <span className={styles.progressPreviewLabel}>{previewState.label}</span>
-                </div>
-              ) : null}
+            <div className={styles.sliderWrapper}>
+              <button
+                type="button"
+                className={`${styles.toolbarButton} ${styles.sliderNavButton}`}
+                onClick={handleGoToPrevious}
+                disabled={!canGoToPreviousSpread}
+                aria-label="Page precedente"
+              >
+                <FontAwesomeIcon icon={faChevronLeft} />
+              </button>
+              <div
+                className={styles.sliderTrack}
+                ref={progressRef}
+                onPointerMove={handleTrackPointerMove}
+                onPointerLeave={handleTrackPointerLeave}
+                onPointerDown={handleTrackPointerMove}
+                onPointerUp={handleTrackPointerLeave}
+                onPointerCancel={handleTrackPointerLeave}
+              >
+                <input
+                  type="range"
+                  min={0}
+                  max={Math.max(totalPages - 1, 0)}
+                  value={displayedSliderValue}
+                  step={1}
+                  onInput={handleSliderInput}
+                  onPointerDown={handleSliderPointerDown}
+                  onPointerUp={handleSliderPointerUp}
+                  onPointerCancel={handleSliderPointerCancel}
+                  onFocus={() => handleNodeEnter(currentEntryIndex)}
+                  onBlur={handleSliderBlur}
+                  className={styles.sliderInput}
+                  style={{ '--progress': `${progressFillPercent}%` } as CSSProperties}
+                  disabled={totalPages <= 1}
+                  aria-label="Naviguer dans le magazine"
+                />
+                {previewState && pdfDocument && !isMobileLayout ? (
+                  <div className={styles.progressPreview} style={{ left: `${previewState.leftPercent}%` }}>
+                    {previewState.pageNumber ? (
+                      <div className={styles.progressPreviewPage}>
+                        <Page
+                          pageNumber={previewState.pageNumber}
+                          pdf={pdfDocument}
+                          width={PREVIEW_WIDTH}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                          onLoadError={() => setPreviewState(null)}
+                          onRenderError={() => setPreviewState(null)}
+                        />
+                      </div>
+                    ) : (
+                      <div className={styles.progressPreviewBlank}>Page blanche</div>
+                    )}
+                    <span className={styles.progressPreviewLabel}>{previewState.label}</span>
+                  </div>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                className={`${styles.toolbarButton} ${styles.sliderNavButton}`}
+                onClick={handleGoToNext}
+                disabled={!canGoToNextSpread}
+                aria-label="Page suivante"
+              >
+                <FontAwesomeIcon icon={faChevronRight} />
+              </button>
             </div>
           </div>
         ) : null}
