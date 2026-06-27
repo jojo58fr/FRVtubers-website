@@ -59,7 +59,10 @@ const MAX_PAGE_WIDTH = 680
 const FULLSCREEN_MAX_PAGE_WIDTH = 820
 const DOUBLE_PAGE_BREAKPOINT = 960
 const PREVIEW_WIDTH = 140
-const MAX_RENDER_DEVICE_PIXEL_RATIO = 8
+const MAX_RENDER_DEVICE_PIXEL_RATIO = 2
+const MAX_ZOOM_RENDER_DEVICE_PIXEL_RATIO = 1.5
+const PREVIEW_RENDER_DEVICE_PIXEL_RATIO = 1
+const PAGE_RENDER_WINDOW = 4
 
 if (typeof window !== 'undefined') {
   if (typeof window.DOMMatrix === 'undefined') {
@@ -442,8 +445,12 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     const baseDevicePixelRatio =
       typeof window !== 'undefined' && window.devicePixelRatio > 0 ? window.devicePixelRatio : 1
 
-    return Math.min(MAX_RENDER_DEVICE_PIXEL_RATIO, baseDevicePixelRatio)
-  }, [])
+    const maxDevicePixelRatio = isZoomedMode
+      ? MAX_ZOOM_RENDER_DEVICE_PIXEL_RATIO
+      : MAX_RENDER_DEVICE_PIXEL_RATIO
+
+    return Math.min(maxDevicePixelRatio, baseDevicePixelRatio)
+  }, [isZoomedMode])
   const getEntryIndexForPage = useCallback(
     (pageNumber: number) => {
       if (totalEntries === 0) {
@@ -550,6 +557,16 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
   )
 
   const currentSpreadStartIndex = getSpreadStartIndex(currentEntryIndex)
+  const shouldRenderEntry = useCallback(
+    (index: number) => {
+      if (isZoomedMode) {
+        return true
+      }
+
+      return Math.abs(index - currentSpreadStartIndex) <= PAGE_RENDER_WINDOW
+    },
+    [currentSpreadStartIndex, isZoomedMode],
+  )
 
   const currentPageNumber = useMemo(() => {
     const entry = pageEntries[currentSpreadStartIndex]
@@ -1584,22 +1601,30 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
                   onFlip={handleFlip}
                   onInit={handleInit}
                 >
-                  {pageEntries.map(({ pageNumber, index }) =>
-                    pageNumber ? (
+                  {pageEntries.map(({ pageNumber, index }) => {
+                    const shouldRenderPage = shouldRenderEntry(index)
+
+                    if (!pageNumber) {
+                      return <div key={`blank-${index}`} className={`${styles.flipPage} ${styles.blankPage}`} />
+                    }
+
+                    return (
                       <div key={`page-${pageNumber}`} className={styles.flipPage} data-page={pageNumber}>
-                        <Page
-                          pageNumber={pageNumber}
-                          width={pageWidth}
-                          devicePixelRatio={pageRenderDevicePixelRatio}
-                          loading={null}
-                          renderTextLayer={false}
-                          renderAnnotationLayer={false}
-                        />
+                        {shouldRenderPage ? (
+                          <Page
+                            pageNumber={pageNumber}
+                            width={pageWidth}
+                            devicePixelRatio={pageRenderDevicePixelRatio}
+                            loading={null}
+                            renderTextLayer={false}
+                            renderAnnotationLayer={false}
+                          />
+                        ) : (
+                          <div className={`${styles.flipPage} ${styles.blankPage}`} aria-hidden="true" />
+                        )}
                       </div>
-                    ) : (
-                      <div key={`blank-${index}`} className={`${styles.flipPage} ${styles.blankPage}`} />
-                    ),
-                  )}
+                    )
+                  })}
                 </HTMLFlipBook>
               </div>
             )
@@ -1653,6 +1678,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
                           pageNumber={previewState.pageNumber}
                           pdf={pdfDocument}
                           width={PREVIEW_WIDTH}
+                          devicePixelRatio={PREVIEW_RENDER_DEVICE_PIXEL_RATIO}
                           renderTextLayer={false}
                           renderAnnotationLayer={false}
                           onLoadError={() => setPreviewState(null)}
