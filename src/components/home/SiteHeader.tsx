@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpRightFromSquare, faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
 import ThemeToggle from '../ThemeToggle'
 import styles from './SiteHeader.module.scss'
 
@@ -15,12 +15,34 @@ import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 export type NavItem = {
   label: string
   href: string
-  children?: Array<{ label: string; href: string }>
+  openInNewTab?: boolean
+  children?: Array<{ label: string; href: string; openInNewTab?: boolean }>
 }
 
 type SiteHeaderProps = {
   navItems: NavItem[]
 }
+
+const getLinkTargetProps = (openInNewTab?: boolean) =>
+  openInNewTab
+    ? {
+        target: '_blank',
+        rel: 'noreferrer',
+      }
+    : {}
+
+const renderNavLabel = (label: string, openInNewTab?: boolean) => (
+  <>
+    <span>{label}</span>
+    {openInNewTab ? (
+      <FontAwesomeIcon
+        icon={faArrowUpRightFromSquare}
+        className={styles.externalLinkIcon}
+        aria-hidden="true"
+      />
+    ) : null}
+  </>
+)
 
 const SiteHeader = ({ navItems }: SiteHeaderProps) => {
   const { data: session } = useSession()
@@ -128,6 +150,7 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
               >
                 <a
                   href={item.href}
+                  {...getLinkTargetProps(item.openInNewTab)}
                   className={`${styles.navLink} ${hasChildren ? styles.navLinkHasChildren : ''} ${
                     isOpen ? styles.navLinkOpen : ''
                   }`}
@@ -137,14 +160,19 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
                     }
                   }}
                 >
-                  {item.label}
+                  {renderNavLabel(item.label, item.openInNewTab)}
                   {hasChildren ? <span className={styles.navCaret} aria-hidden="true">▾</span> : null}
                 </a>
                 {hasChildren ? (
                   <div className={`${styles.submenu} ${isOpen ? styles.submenuOpen : ''}`}>
                     {item.children!.map((child) => (
-                      <a key={child.href} href={child.href} className={styles.submenuLink}>
-                        {child.label}
+                      <a
+                        key={child.href}
+                        href={child.href}
+                        {...getLinkTargetProps(child.openInNewTab)}
+                        className={styles.submenuLink}
+                      >
+                        {renderNavLabel(child.label, child.openInNewTab)}
                       </a>
                     ))}
                   </div>
@@ -234,8 +262,13 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
 
             if (!hasChildren) {
               return (
-                <a key={item.href} href={item.href} onClick={closeMenu}>
-                  {item.label}
+                <a
+                  key={item.href}
+                  href={item.href}
+                  {...getLinkTargetProps(item.openInNewTab)}
+                  onClick={closeMenu}
+                >
+                  {renderNavLabel(item.label, item.openInNewTab)}
                 </a>
               )
             }
@@ -253,8 +286,13 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
                 </button>
                 <div className={`${styles.mobileSubmenu} ${isOpen ? styles.mobileSubmenuOpen : ''}`}>
                   {item.children!.map((child) => (
-                    <a key={child.href} href={child.href} onClick={closeMenu}>
-                      {child.label}
+                    <a
+                      key={child.href}
+                      href={child.href}
+                      {...getLinkTargetProps(child.openInNewTab)}
+                      onClick={closeMenu}
+                    >
+                      {renderNavLabel(child.label, child.openInNewTab)}
                     </a>
                   ))}
                 </div>

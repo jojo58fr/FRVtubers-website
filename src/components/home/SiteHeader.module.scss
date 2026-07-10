@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1300px;
+  max-width: 1600px;
   padding: 16px clamp(16px, 4vw, 40px);
   gap: 16px;
 }
@@ -84,6 +84,11 @@
   gap: 6px;
 }
 
+.externalLinkIcon {
+  font-size: 0.72em;
+  opacity: 0.8;
+}
+
 .navLink::after {
   content: "";
   position: absolute;
@@ -143,6 +148,9 @@
 }
 
 .submenuLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 12px;
   border-radius: 10px;
   color: var(--text-secondary);
@@ -555,7 +563,7 @@
   color: var(--text-primary);
 }
 
-@media (max-width: 1120px) and (min-width: 768px) {
+@media (max-width: 1350px) and (min-width: 768px) {
   .inner {
     display: grid;
     grid-template-columns: 1fr;
