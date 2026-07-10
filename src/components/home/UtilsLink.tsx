@@ -37,8 +37,8 @@ const platforms = [
     icon: faBoxOpen,
     label: 'FRVRessources',
     description: 'Ressources gratuites et payantes pour VTubers FR',
-    href: '#',
-    comingSoon: true,
+    href: 'https://resources.frvtubers.com/',
+    comingSoon: false,
   },
   {
     icon: faMusic,
