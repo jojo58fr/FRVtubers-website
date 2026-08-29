@@ -19,10 +19,11 @@ const MagazineViewer = dynamic(() => import('./MagazineViewer'), {
 type MagazineViewerWrapperProps = {
   file: string
   title: string
+  defaultNativeView?: boolean
 }
 
-const MagazineViewerWrapper = ({ file, title }: MagazineViewerWrapperProps) => {
-  return <MagazineViewer file={file} title={title} />
+const MagazineViewerWrapper = ({ file, title, defaultNativeView = false }: MagazineViewerWrapperProps) => {
+  return <MagazineViewer file={file} title={title} defaultNativeView={defaultNativeView} />
 }
 
 export default MagazineViewerWrapper

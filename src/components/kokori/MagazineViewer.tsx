@@ -33,6 +33,7 @@ import styles from './MagazineViewer.module.scss'
 type MagazineViewerProps = {
   file: string
   title: string
+  defaultNativeView?: boolean
 }
 
 type LayoutDimensions = {
@@ -147,7 +148,7 @@ if (typeof window !== 'undefined') {
   }
 }
 
-const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
+const MagazineViewer = ({ file, title, defaultNativeView = false }: MagazineViewerProps) => {
   const viewerRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const zoomMenuRef = useRef<HTMLDivElement | null>(null)
@@ -159,6 +160,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
   const [scale, setScale] = useState<number>(1)
   const [zoomMenuOpen, setZoomMenuOpen] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
+  const [isNativeView, setIsNativeView] = useState<boolean>(defaultNativeView)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [currentEntryIndex, setCurrentEntryIndex] = useState<number>(0)
   const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null)
@@ -350,9 +352,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
 
   const documentOptions = useMemo(
     () => ({
-      cMapUrl: '/pdfjs/',
-      cMapPacked: true,
-      wasmUrl: '/pdfjs/openjpeg.wasm/',
+      wasmUrl: '/pdfjs/',
     }),
     [],
   )
@@ -428,6 +428,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
   const defaultSpreadSize = layout.isDoubleLayout ? 2 : 1
 
   const canRenderBook =
+    !isNativeView &&
     !loadError &&
     pageWidth > 0 &&
     pageHeight > 0 &&
@@ -607,6 +608,10 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
   )
   const displayedSliderValue = sliderDraftValue ?? currentSliderValue
   const toolbarPageLabel = useMemo(() => {
+    if (isNativeView) {
+      return isMobileLayout ? 'PDF' : 'Lecteur PDF natif'
+    }
+
     const safeCurrentPage = Math.min(Math.max(currentPageNumber, 1), Math.max(totalPages, 1))
     const safeTotalPages = Math.max(totalPages, 1)
 
@@ -615,7 +620,8 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
     }
 
     return `Page ${safeCurrentPage} / ${safeTotalPages}`
-  }, [currentPageNumber, isMobileLayout, totalPages])
+  }, [currentPageNumber, isMobileLayout, isNativeView, totalPages])
+  const nativePdfSrc = useMemo(() => `${file}#view=FitH`, [file])
 
   const clampOffset = useCallback(
     (nextX: number, nextY: number) => {
@@ -1483,7 +1489,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
             type="button"
             className={styles.toolbarButton}
             onClick={handleGoToPrevious}
-            disabled={!canGoToPreviousSpread}
+            disabled={isNativeView || !canGoToPreviousSpread}
             aria-label="Page precedente"
           >
             <FontAwesomeIcon icon={faChevronLeft} />
@@ -1492,7 +1498,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
             type="button"
             className={styles.toolbarButton}
             onClick={handleGoToNext}
-            disabled={!canGoToNextSpread}
+            disabled={isNativeView || !canGoToNextSpread}
             aria-label="Page suivante"
           >
             <FontAwesomeIcon icon={faChevronRight} />
@@ -1501,6 +1507,16 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
         </div>
 
         <div className={styles.toolbarSpacer} />
+
+        <button
+          type="button"
+          className={`${styles.toolbarButton} ${styles.toolbarModeButton}`}
+          onClick={() => setIsNativeView((value) => !value)}
+          aria-pressed={isNativeView}
+          aria-label={isNativeView ? 'Revenir au mode magazine' : 'Basculer vers le lecteur PDF natif'}
+        >
+          {isNativeView ? 'Flipbook' : 'Mode natif'}
+        </button>
 
         <button
           type="button"
@@ -1513,125 +1529,138 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
       </div>
 
       <div className={styles.documentArea} ref={contentRef}>
-        <Document
-          file={file}
-          onLoadSuccess={handleDocumentLoad}
-          onLoadError={handleDocumentError}
-          loading={<div className={styles.placeholder}>Chargement du magazine...</div>}
-          error={
-            <div className={styles.placeholder}>
-              {loadError ?? "Impossible de lire le magazine. Verifiez le fichier PDF."}
-            </div>
-          }
-          className={styles.document}
-          options={documentOptions}
-        >
-          {loadError ? null : canRenderBook ? (
-            isZoomedMode ? (
-              <div
-                className={`${flipContainerClassName} ${styles.zoomReader}`}
-                style={zoomReaderStyle}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerCancel}
-              >
-                <div className={styles.zoomSpread}>
-                  {currentZoomEntries.map(({ pageNumber, index }) =>
-                    pageNumber ? (
-                      <div
-                        key={`zoom-page-${pageNumber}`}
-                        className={`${styles.flipPage} ${styles.zoomPage}`}
-                        data-page={pageNumber}
-                        style={zoomPageStyle}
-                      >
-                        <Page
-                          pageNumber={pageNumber}
-                          width={scaledWidth}
-                          devicePixelRatio={pageRenderDevicePixelRatio}
-                          loading={null}
-                          renderTextLayer={false}
-                          renderAnnotationLayer={false}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        key={`zoom-blank-${currentSpreadStartIndex + index}`}
-                        className={`${styles.flipPage} ${styles.blankPage} ${styles.zoomPage}`}
-                        style={zoomPageStyle}
-                      />
-                    ),
-                  )}
-                </div>
+        {isNativeView ? (
+          <div className={styles.nativeViewer}>
+            <iframe
+              className={styles.nativeFrame}
+              src={nativePdfSrc}
+              title={`Lecteur PDF natif pour ${title}`}
+            />
+            <p className={styles.nativeHint}>
+              Ce mode utilise le moteur PDF du navigateur pour contourner les problemes de masques et de transparence.
+            </p>
+          </div>
+        ) : (
+          <Document
+            file={file}
+            onLoadSuccess={handleDocumentLoad}
+            onLoadError={handleDocumentError}
+            loading={<div className={styles.placeholder}>Chargement du magazine...</div>}
+            error={
+              <div className={styles.placeholder}>
+                {loadError ?? "Impossible de lire le magazine. Verifiez le fichier PDF."}
               </div>
-            ) : (
-              <div
-                className={flipContainerClassName}
-                style={flipContainerStyle}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerCancel}
-              >
-                <HTMLFlipBook
-                  ref={flipBookRef}
-                  width={pageWidth}
-                  height={pageHeight}
-                  size="fixed"
-                  startPage={currentSpreadStartIndex}
-                  minWidth={0}
-                  maxWidth={pageWidth}
-                  minHeight={0}
-                  maxHeight={pageHeight}
-                  drawShadow
-                  startZIndex={0}
-                  autoSize
-                  clickEventForward
-                  useMouseEvents
-                  swipeDistance={30}
-                  showPageCorners
-                  disableFlipByClick
-                  showCover
-                  className={styles.flipBook}
-                  flippingTime={750}
-                  maxShadowOpacity={0.4}
-                  mobileScrollSupport
-                  usePortrait
-                  style={{}}
-                  onFlip={handleFlip}
-                  onInit={handleInit}
+            }
+            className={styles.document}
+            options={documentOptions}
+          >
+            {loadError ? null : canRenderBook ? (
+              isZoomedMode ? (
+                <div
+                  className={`${flipContainerClassName} ${styles.zoomReader}`}
+                  style={zoomReaderStyle}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerCancel}
                 >
-                  {pageEntries.map(({ pageNumber, index }) => {
-                    const shouldRenderPage = shouldRenderEntry(index)
-
-                    if (!pageNumber) {
-                      return <div key={`blank-${index}`} className={`${styles.flipPage} ${styles.blankPage}`} />
-                    }
-
-                    return (
-                      <div key={`page-${pageNumber}`} className={styles.flipPage} data-page={pageNumber}>
-                        {shouldRenderPage ? (
+                  <div className={styles.zoomSpread}>
+                    {currentZoomEntries.map(({ pageNumber, index }) =>
+                      pageNumber ? (
+                        <div
+                          key={`zoom-page-${pageNumber}`}
+                          className={`${styles.flipPage} ${styles.zoomPage}`}
+                          data-page={pageNumber}
+                          style={zoomPageStyle}
+                        >
                           <Page
                             pageNumber={pageNumber}
-                            width={pageWidth}
+                            width={scaledWidth}
                             devicePixelRatio={pageRenderDevicePixelRatio}
                             loading={null}
                             renderTextLayer={false}
                             renderAnnotationLayer={false}
                           />
-                        ) : (
-                          <div className={`${styles.flipPage} ${styles.blankPage}`} aria-hidden="true" />
-                        )}
-                      </div>
-                    )
-                  })}
-                </HTMLFlipBook>
-              </div>
-            )
-          ) : (
-            <div className={styles.placeholder}>Chargement du magazine...</div>
-          )}
-        </Document>
+                        </div>
+                      ) : (
+                        <div
+                          key={`zoom-blank-${currentSpreadStartIndex + index}`}
+                          className={`${styles.flipPage} ${styles.blankPage} ${styles.zoomPage}`}
+                          style={zoomPageStyle}
+                        />
+                      ),
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={flipContainerClassName}
+                  style={flipContainerStyle}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerCancel}
+                >
+                  <HTMLFlipBook
+                    ref={flipBookRef}
+                    width={pageWidth}
+                    height={pageHeight}
+                    size="fixed"
+                    startPage={currentSpreadStartIndex}
+                    minWidth={0}
+                    maxWidth={pageWidth}
+                    minHeight={0}
+                    maxHeight={pageHeight}
+                    drawShadow
+                    startZIndex={0}
+                    autoSize
+                    clickEventForward
+                    useMouseEvents
+                    swipeDistance={30}
+                    showPageCorners
+                    disableFlipByClick
+                    showCover
+                    className={styles.flipBook}
+                    flippingTime={750}
+                    maxShadowOpacity={0.4}
+                    mobileScrollSupport
+                    usePortrait
+                    style={{}}
+                    onFlip={handleFlip}
+                    onInit={handleInit}
+                  >
+                    {pageEntries.map(({ pageNumber, index }) => {
+                      const shouldRenderPage = shouldRenderEntry(index)
+
+                      if (!pageNumber) {
+                        return <div key={`blank-${index}`} className={`${styles.flipPage} ${styles.blankPage}`} />
+                      }
+
+                      return (
+                        <div key={`page-${pageNumber}`} className={styles.flipPage} data-page={pageNumber}>
+                          {shouldRenderPage ? (
+                            <Page
+                              pageNumber={pageNumber}
+                              width={pageWidth}
+                              devicePixelRatio={pageRenderDevicePixelRatio}
+                              loading={null}
+                              renderTextLayer={false}
+                              renderAnnotationLayer={false}
+                            />
+                          ) : (
+                            <div className={`${styles.flipPage} ${styles.blankPage}`} aria-hidden="true" />
+                          )}
+                        </div>
+                      )
+                    })}
+                  </HTMLFlipBook>
+                </div>
+              )
+            ) : (
+              <div className={styles.placeholder}>Chargement du magazine...</div>
+            )}
+          </Document>
+        )}
         {canRenderBook ? (
           <div className={styles.progressBar}>
             <div className={styles.sliderWrapper}>
@@ -1707,7 +1736,7 @@ const MagazineViewer = ({ file, title }: MagazineViewerProps) => {
       </div>
 
       <p className={styles.caption}>
-        {title} - {numPages > 0 ? `${numPages} pages` : 'Chargement en cours'}
+        {title} - {isNativeView ? 'lecteur natif' : numPages > 0 ? `${numPages} pages` : 'Chargement en cours'}
       </p>
     </div>
   )

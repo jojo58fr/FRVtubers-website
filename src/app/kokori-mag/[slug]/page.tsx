@@ -103,7 +103,7 @@ export default async function KokoriMagazinePage({
         </section>
 
         <section className={styles.viewerSection}>
-          <MagazineViewerWrapper file={magazine.pdfPath} title={magazine.title} />
+          <MagazineViewerWrapper file={magazine.pdfPath} title={magazine.title} defaultNativeView />
           <a className={styles.downloadLink} href={magazine.pdfPath} download>
             Telecharger la version PDF
           </a>
