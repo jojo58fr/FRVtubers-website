@@ -53,6 +53,7 @@ Complétez ensuite :
 | `NEXTAUTH_SECRET` | Secret NextAuth (`npx auth secret`) |
 | `NEXTAUTH_URL` | URL publique (dev : `http://localhost:3000`) |
 | `NEXT_PUBLIC_DISCORD_INVITE` | Lien d’invitation affiché à l’utilisateur |
+| `MAGAZINE_UPLOAD_DIR` | Répertoire persistant facultatif pour les PDF et couvertures uploadés (par défaut : `public/magazines`) |
 
 > Dans Discord > Paramètres serveur > *Widget*, activez le widget et récupérez l’ID du serveur. Les scopes OAuth requis : `identify`, `email`, `guilds`, `guilds.members.read`.
 
@@ -87,6 +88,7 @@ Scripts utiles :
 
 - Configurer `NEXTAUTH_URL` avec le domaine final (https) et mettre à jour les redirect URI Discord.
 - Vérifier que les variables d’environnement sont renseignées dans la plateforme (Vercel, Netlify, Docker…).
+- Pour les magazines uploadés, monter un volume persistant et définir `MAGAZINE_UPLOAD_DIR` vers ce volume. Les fichiers sont servis dynamiquement sous `/magazines/*`, sans redémarrer Next.js.
 - Utiliser `npm run build && npm run start` pour tester en local avant upload.
 
 ## 🤝 Contribution

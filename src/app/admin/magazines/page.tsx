@@ -13,6 +13,12 @@ import {
   MAX_PDF_SIZE_BYTES,
   MAX_PDF_SIZE_LABEL,
 } from '@/lib/magazine-upload-constraints'
+import {
+  MAGAZINE_COVER_DIR,
+  MAGAZINE_DIR,
+  resolveMagazinePath,
+  toMagazinePublicPath,
+} from '@/lib/magazine-storage'
 import prisma from '@/lib/prisma'
 import MagazinesManager from './MagazinesManager'
 import styles from './page.module.scss'
@@ -34,10 +40,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   'delete-failed': 'La suppression a échoué.',
   'file-too-large': `Les fichiers dépassent la taille maximale autorisée (PDF : ${MAX_PDF_SIZE_LABEL}, miniature : ${MAX_COVER_SIZE_LABEL}).`,
 }
-
-const PUBLIC_DIR = path.join(process.cwd(), 'public')
-const PDF_DIR = path.join(PUBLIC_DIR, 'magazines')
-const COVER_DIR = path.join(PDF_DIR, 'covers')
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -71,9 +73,6 @@ const ensureDir = async (dir: string) => {
   await mkdir(dir, { recursive: true })
 }
 
-const toPublicPath = (absolutePath: string) =>
-  `/${path.relative(PUBLIC_DIR, absolutePath).replace(/\\/g, '/')}`
-
 const saveUploadedFile = async (file: File, directory: string, baseName: string, fallbackExt: string) => {
   await ensureDir(directory)
   const buffer = Buffer.from(await file.arrayBuffer())
@@ -82,7 +81,7 @@ const saveUploadedFile = async (file: File, directory: string, baseName: string,
   const filename = `${baseName}-${Date.now()}-${randomUUID().slice(0, 6)}${extension}`
   const absolutePath = path.join(directory, filename)
   await writeFile(absolutePath, buffer)
-  return { absolutePath, publicPath: toPublicPath(absolutePath) }
+  return { absolutePath, publicPath: toMagazinePublicPath(absolutePath) }
 }
 
 const removeIfLocal = async (maybePath: string | null | undefined) => {
@@ -90,7 +89,11 @@ const removeIfLocal = async (maybePath: string | null | undefined) => {
     return
   }
 
-  const absolutePath = path.join(PUBLIC_DIR, maybePath.replace(/^\/+/, '').replace(/\\/g, '/'))
+  const pathSegments = maybePath.slice('/magazines/'.length).split('/')
+  const absolutePath = resolveMagazinePath(pathSegments)
+  if (!absolutePath) {
+    return
+  }
   try {
     await unlink(absolutePath)
   } catch (error) {
@@ -156,8 +159,8 @@ const createMagazineAction = async (formData: FormData) => {
 
   try {
     const [{ publicPath: pdfPath }, { publicPath: coverImageUrl }] = await Promise.all([
-      saveUploadedFile(pdfFile, PDF_DIR, slug, '.pdf'),
-      saveUploadedFile(coverFile, COVER_DIR, slug, '.png'),
+      saveUploadedFile(pdfFile, MAGAZINE_DIR, slug, '.pdf'),
+      saveUploadedFile(coverFile, MAGAZINE_COVER_DIR, slug, '.png'),
     ])
 
     await prisma.magazine.create({
@@ -216,13 +219,13 @@ const updateMagazineAction = async (formData: FormData) => {
 
   try {
     if (pdfFile) {
-      const stored = await saveUploadedFile(pdfFile, PDF_DIR, slug, '.pdf')
+      const stored = await saveUploadedFile(pdfFile, MAGAZINE_DIR, slug, '.pdf')
       await removeIfLocal(existing.pdfPath)
       pdfPath = stored.publicPath
     }
 
     if (coverFile) {
-      const stored = await saveUploadedFile(coverFile, COVER_DIR, slug, '.png')
+      const stored = await saveUploadedFile(coverFile, MAGAZINE_COVER_DIR, slug, '.png')
       await removeIfLocal(existing.coverImageUrl)
       coverImageUrl = stored.publicPath
     }
