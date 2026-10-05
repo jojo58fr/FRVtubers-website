@@ -160,7 +160,8 @@ const MagazineViewer = ({ file, title, defaultNativeView = false }: MagazineView
   const [scale, setScale] = useState<number>(1)
   const [zoomMenuOpen, setZoomMenuOpen] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
-  const [isNativeView, setIsNativeView] = useState<boolean>(defaultNativeView)
+  // TODO: Retravailler le mode natif avant de réafficher son bouton dans la barre d'outils.
+  const isNativeView = defaultNativeView
   const [loadError, setLoadError] = useState<string | null>(null)
   const [currentEntryIndex, setCurrentEntryIndex] = useState<number>(0)
   const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null)
@@ -1507,16 +1508,6 @@ const MagazineViewer = ({ file, title, defaultNativeView = false }: MagazineView
         </div>
 
         <div className={styles.toolbarSpacer} />
-
-        <button
-          type="button"
-          className={`${styles.toolbarButton} ${styles.toolbarModeButton}`}
-          onClick={() => setIsNativeView((value) => !value)}
-          aria-pressed={isNativeView}
-          aria-label={isNativeView ? 'Revenir au mode magazine' : 'Basculer vers le lecteur PDF natif'}
-        >
-          {isNativeView ? 'Flipbook' : 'Mode natif'}
-        </button>
 
         <button
           type="button"
