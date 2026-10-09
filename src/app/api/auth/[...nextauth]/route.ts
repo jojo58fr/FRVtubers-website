@@ -342,6 +342,7 @@ export const authOptions: NextAuthOptions = {
     DiscordProvider({
       clientId: discordClientId,
       clientSecret: discordClientSecret,
+      issuer: 'https://discord.com',
       authorization: {
         params: {
           scope: 'identify email guilds guilds.members.read',
