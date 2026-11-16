@@ -7,6 +7,7 @@ import BackToTopButton from '@/components/BackToTopButton'
 import BlockRenderer from '@/components/events/BlockRenderer'
 import { mainNavItems } from '@/lib/navigation'
 import { getPublishedEvent } from '@/lib/events'
+import { EventDates } from '@/components/events/EventDates'
 import styles from './page.module.scss'
 
 export const dynamic = 'force-dynamic'
@@ -14,13 +15,6 @@ export const dynamic = 'force-dynamic'
 type PageProps = {
   params: Promise<{ slug: string }>
 }
-
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'Europe/Paris',
-})
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
@@ -47,7 +41,7 @@ const EventPage = async ({ params }: PageProps) => {
         <article className={styles.article}>
           <header className={styles.header}>
             <h1>{event.title}</h1>
-            <time dateTime={event.startsAt.toISOString()}>{dateFormatter.format(event.startsAt)}</time>
+            <EventDates startsAt={event.startsAt} endsAt={event.endsAt} />
             {event.summary ? <p className={styles.summary}>{event.summary}</p> : null}
           </header>
           {event.coverImagePath ? (

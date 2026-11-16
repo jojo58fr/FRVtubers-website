@@ -5,6 +5,7 @@ import SiteFooter from '@/components/home/SiteFooter'
 import BackToTopButton from '@/components/BackToTopButton'
 import { mainNavItems } from '@/lib/navigation'
 import { listPublishedEvents, type EventType } from '@/lib/events'
+import { EventDates } from '@/components/events/EventDates'
 import styles from './page.module.scss'
 
 export const dynamic = 'force-dynamic'
@@ -22,13 +23,6 @@ const TYPE_LABELS: Record<EventType, string> = {
 
 const isEventType = (value: string | undefined): value is EventType =>
   value !== undefined && Object.prototype.hasOwnProperty.call(TYPE_LABELS, value)
-
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'Europe/Paris',
-})
 
 type PageProps = {
   searchParams: Promise<{ type?: string | string[] }>
@@ -80,7 +74,7 @@ const EventsPage = async ({ searchParams }: PageProps) => {
                   <div className={styles.cardBody}>
                     <span className={styles.badge}>{TYPE_LABELS[event.type]}</span>
                     <h2>{event.title}</h2>
-                    <time dateTime={event.startsAt.toISOString()}>{dateFormatter.format(event.startsAt)}</time>
+                    <EventDates startsAt={event.startsAt} endsAt={event.endsAt} />
                     {event.summary ? <p>{event.summary}</p> : null}
                   </div>
                 </>
