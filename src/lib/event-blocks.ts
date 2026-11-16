@@ -70,13 +70,22 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const cleanText = (value: unknown, max: number): string =>
   typeof value === 'string' ? value.trim().slice(0, max) : ''
 
-// Only site-relative upload paths: starts with a single "/", no "..", no "//".
-const isSafeUploadPath = (path: unknown): path is string =>
-  typeof path === 'string' &&
-  path.startsWith('/') &&
-  !path.includes('//') &&
-  !path.includes('\\') &&
-  !path.split('/').includes('..')
+// Block images live under /evenements/ (public/evenements/<slug>/). Strict check, no trimming:
+// no control chars (browsers strip tab/newline from URLs), no "%" (encoded dot-segments),
+// no backslash, no "//", no ".." segment, and the path must survive URL normalization unchanged.
+const IMAGE_PREFIX = '/evenements/'
+const isSafeUploadPath = (path: unknown): path is string => {
+  if (typeof path !== 'string' || !path.startsWith(IMAGE_PREFIX) || path.length === IMAGE_PREFIX.length) {
+    return false
+  }
+  if (/[\u0000-\u001f\u007f\s%\\]/.test(path) || path.includes('//')) return false
+  if (path.split('/').includes('..')) return false
+  try {
+    return new URL(path, 'http://x').pathname === path
+  } catch {
+    return false
+  }
+}
 
 // Lineup policy: an entry with an unsafe url keeps its name and loses only the url;
 // an entry without a name is dropped.

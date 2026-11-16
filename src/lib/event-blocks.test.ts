@@ -10,6 +10,8 @@ describe('isSafeHttpUrl', () => {
     expect(isSafeHttpUrl('//example.com')).toBe(false)
     expect(isSafeHttpUrl('not a url')).toBe(false)
     expect(isSafeHttpUrl('')).toBe(false)
+    expect(isSafeHttpUrl('JAVASCRIPT:alert(1)')).toBe(false)
+    expect(isSafeHttpUrl(' javascript:alert(1)')).toBe(false)
   })
 })
 
@@ -39,6 +41,14 @@ describe('parseVideoUrl', () => {
     expect(parseVideoUrl('javascript:alert(1)')).toBeNull()
     expect(parseVideoUrl('ftp://youtu.be/abc123')).toBeNull()
     expect(parseVideoUrl('garbage')).toBeNull()
+    expect(parseVideoUrl('https://youtube.com@evil.test/')).toBeNull()
+  })
+
+  it('is case-insensitive on scheme and host', () => {
+    expect(parseVideoUrl('HTTPS://WWW.YOUTUBE.COM/watch?v=abc123xyz00')).toEqual({
+      provider: 'youtube',
+      embedUrl: 'https://www.youtube.com/embed/abc123xyz00',
+    })
   })
 
   it('rejects ids that could break out of the embed URL', () => {
@@ -77,7 +87,7 @@ describe('sanitizeBlocks', () => {
     const out = sanitizeBlocks([
       { type: 'heading', text: 'h'.repeat(300), level: 2 },
       { type: 'paragraph', text: 'p'.repeat(6000) },
-      { type: 'image', path: '/uploads/a.png', caption: 'c'.repeat(400) },
+      { type: 'image', path: '/evenements/ev/a.png', caption: 'c'.repeat(400) },
       { type: 'button', label: 'l'.repeat(100), url: 'https://example.com' },
     ])
     expect((out[0] as { text: string }).text).toHaveLength(200)
@@ -113,12 +123,35 @@ describe('sanitizeBlocks', () => {
     expect(sanitizeBlocks([{ type: 'video', url: 'javascript:alert(1)' }])).toEqual([])
   })
 
-  it('accepts only site-relative upload paths for images', () => {
-    const ok = sanitizeBlocks([{ type: 'image', path: '/uploads/a.png' }])
-    expect(ok).toHaveLength(1)
-    for (const path of ['https://evil.test/a.png', '//evil.test/a.png', '/uploads/../secret', 'uploads/a.png', '', 42]) {
+  it('accepts only safe paths under /evenements/ for images', () => {
+    expect(sanitizeBlocks([{ type: 'image', path: '/evenements/ev/a.png' }])).toHaveLength(1)
+    const bad: unknown[] = [
+      '/\t/evil.test/a.png',
+      '/evenements/\n/x.png',
+      '/evenements/%2e%2e/secret',
+      '/api/secret',
+      '//evil.test/a.png',
+      '/evenements/../etc/passwd',
+      '/evenements\\x.png',
+      ' /evenements/a.png',
+      '/evenements',
+      'https://evil.test/a.png',
+      '/uploads/a.png',
+      '',
+      42,
+    ]
+    for (const path of bad) {
       expect(sanitizeBlocks([{ type: 'image', path }])).toEqual([])
     }
+  })
+
+  it('drops a button with a data: url', () => {
+    expect(sanitizeBlocks([{ type: 'button', label: 'Go', url: 'data:text/html,hi' }])).toEqual([])
+  })
+
+  it('lineup drops only a data: url', () => {
+    const out = sanitizeBlocks([{ type: 'lineup', entries: [{ name: 'A', url: 'data:text/html,hi' }] }])
+    expect((out[0] as { entries: unknown[] }).entries).toEqual([{ name: 'A' }])
   })
 
   it('lineup: keeps the entry but drops an unsafe url; drops nameless entries', () => {
