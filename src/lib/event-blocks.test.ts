@@ -16,6 +16,22 @@ describe('isSafeHttpUrl', () => {
 })
 
 describe('parseVideoUrl', () => {
+  it.each(['live', 'shorts', 'embed'])('accepts /%s/<id> on YouTube hosts', (prefix) => {
+    const expected = { provider: 'youtube', embedUrl: 'https://www.youtube.com/embed/abc_123-X' }
+    expect(parseVideoUrl(`https://www.youtube.com/${prefix}/abc_123-X`)).toEqual(expected)
+    expect(parseVideoUrl(`https://m.youtube.com/${prefix}/abc_123-X?feature=share`)).toEqual(expected)
+  })
+
+  it('still rejects look-alike hosts and bad ids on the new path forms', () => {
+    expect(parseVideoUrl('https://youtube.com.evil.test/live/abc')).toBeNull()
+    expect(parseVideoUrl('https://evil.test/shorts/abc')).toBeNull()
+    expect(parseVideoUrl('https://user@evil.test/embed/abc')).toBeNull()
+    expect(parseVideoUrl('https://www.youtube.com/live/')).toBeNull()
+    expect(parseVideoUrl('https://www.youtube.com/shorts/a b')).toBeNull()
+    expect(parseVideoUrl('https://www.youtube.com/live/a%22onload')).toBeNull()
+    expect(parseVideoUrl('https://www.youtube.com/channel/abc')).toBeNull()
+  })
+
   it('parses youtu.be and youtube.com watch URLs', () => {
     const expected = { provider: 'youtube', embedUrl: 'https://www.youtube.com/embed/abc123' }
     expect(parseVideoUrl('https://youtu.be/abc123')).toEqual(expected)

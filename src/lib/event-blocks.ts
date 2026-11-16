@@ -32,6 +32,7 @@ export const isSafeHttpUrl = (url: string): boolean =>
   typeof url === 'string' && parseHttpUrl(url) !== null
 
 const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com'])
+const YOUTUBE_PATH_PREFIXES = new Set(['live', 'shorts', 'embed'])
 const TWITCH_HOSTS = new Set(['twitch.tv', 'www.twitch.tv', 'm.twitch.tv'])
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{1,64}$/
 const TWITCH_NAME = /^[A-Za-z0-9_]{1,64}$/
@@ -45,8 +46,14 @@ export const parseVideoUrl = (
   const host = parsed.hostname.toLowerCase()
 
   if (host === 'youtu.be' || YOUTUBE_HOSTS.has(host)) {
-    const id =
-      host === 'youtu.be' ? parsed.pathname.split('/')[1] : parsed.searchParams.get('v')
+    let id: string | null | undefined
+    if (host === 'youtu.be') {
+      id = parsed.pathname.split('/')[1]
+    } else {
+      // watch?v=<ID>, ou chemins /live/<ID>, /shorts/<ID>, /embed/<ID>.
+      const [first, second] = parsed.pathname.split('/').filter(Boolean)
+      id = first && YOUTUBE_PATH_PREFIXES.has(first) ? second : parsed.searchParams.get('v')
+    }
     if (!id || !YOUTUBE_ID.test(id)) return null
     return { provider: 'youtube', embedUrl: `https://www.youtube.com/embed/${id}` }
   }

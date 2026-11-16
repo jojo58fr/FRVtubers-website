@@ -48,9 +48,10 @@ const revalidateAll = () => {
   revalidatePath('/galerie/[slug]')
 }
 
-const redirectWithStatus = (code: keyof typeof STATUS_MESSAGES): never => {
+const redirectWithStatus = (code: keyof typeof STATUS_MESSAGES, ignoredBlocks = 0): never => {
   revalidateAll()
-  return redirect(`${PAGE_PATH}?status=${encodeURIComponent(code)}`)
+  const ignored = ignoredBlocks > 0 ? `&ignored=${ignoredBlocks}` : ''
+  return redirect(`${PAGE_PATH}?status=${encodeURIComponent(code)}${ignored}`)
 }
 
 const redirectWithError = (code: keyof typeof ERROR_MESSAGES): never => {
@@ -93,7 +94,7 @@ const createEventAction = async (formData: FormData) => {
   const session = await requireAdminSession({ redirectTo: PAGE_PATH })
   const result = await createEvent(readInput(formData), readFiles(formData), session.user?.id ?? null)
   if (!result.ok) return redirectWithError(result.error)
-  return redirectWithStatus('created')
+  return redirectWithStatus('created', result.ignoredBlocks)
 }
 
 const updateEventAction = async (formData: FormData) => {
@@ -104,7 +105,7 @@ const updateEventAction = async (formData: FormData) => {
   if (!id) return redirectWithError('missing-id')
   const result = await updateEvent(id, readInput(formData), readFiles(formData))
   if (!result.ok) return redirectWithError(result.error)
-  return redirectWithStatus('updated')
+  return redirectWithStatus('updated', result.ignoredBlocks)
 }
 
 const deleteEventAction = async (formData: FormData) => {
@@ -134,8 +135,14 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
   const params = await searchParams
   const statusCode = firstParamValue(params?.status)
   const errorCode = firstParamValue(params?.error)
-  const statusMessage = statusCode ? STATUS_MESSAGES[statusCode] ?? null : null
-  const errorMessage = errorCode ? ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] ?? null : null
+  const statusMessage = statusCode && Object.hasOwn(STATUS_MESSAGES, statusCode) ? STATUS_MESSAGES[statusCode] : null
+  const errorMessage = errorCode && Object.hasOwn(ERROR_MESSAGES, errorCode) ? ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] : null
+
+  const ignoredCount = Math.min(Number.parseInt(firstParamValue(params?.ignored) ?? '', 10) || 0, 100)
+  const ignoredMessage =
+    statusMessage && ignoredCount > 0
+      ? `${ignoredCount} bloc${ignoredCount > 1 ? 's' : ''} invalide${ignoredCount > 1 ? 's' : ''} ignoré${ignoredCount > 1 ? 's' : ''} (champ vide, URL non autorisée…).`
+      : null
 
   const rows = await prisma.event.findMany({ orderBy: { startsAt: 'desc' } })
   const events: PlainAdminEvent[] = rows.map((row) => ({
@@ -176,6 +183,7 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
         </div>
         <div className={styles.feedback}>
           {statusMessage ? <span className={styles.success}>{statusMessage}</span> : null}
+          {ignoredMessage ? <span className={styles.error}>{ignoredMessage}</span> : null}
           {errorMessage ? <span className={styles.error}>{errorMessage}</span> : null}
         </div>
       </header>
