@@ -72,8 +72,12 @@ for (const kind of ['contact', 'application', 'discord']) {
     const html = renderToStaticMarkup(React.createElement(Notice, { kind }));
     const policy = renderPage('src/app/confidentialite/page.tsx');
     assert.match(html, /aria-label="Information sur les données personnelles"/);
-    assert.ok(html.includes('[À COMPLÉTER]'));
     assert.doesNotMatch(html, /<input|<form/);
+    if (kind === 'contact') assert.match(html, /EmailJS/);
+    else {
+      assert.doesNotMatch(html, /EmailJS/);
+      assert.match(html, kind === 'application' ? /candidature.*staff/ : /connexion Discord/);
+    }
     assert.match(html, /href="\/confidentialite#droits"/);
     for (const [, id] of html.matchAll(/href="\/confidentialite#([^"]+)"/g)) {
       assert.ok(policy.includes(`id="${id}"`), `policy section exists: ${id}`);
