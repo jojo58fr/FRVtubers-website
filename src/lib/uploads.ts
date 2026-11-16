@@ -8,7 +8,7 @@ export const IMAGE_MAX_BYTES = 10 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 
 // Résolu à chaque appel pour pouvoir être surchargé (PUBLIC_DIR) dans les tests.
-const getPublicDir = () => path.resolve(process.env.PUBLIC_DIR || path.join(process.cwd(), 'public'))
+export const getPublicDir = () => path.resolve(process.env.PUBLIC_DIR || path.join(process.cwd(), 'public'))
 
 export class InvalidUploadError extends Error {}
 
@@ -109,10 +109,14 @@ export const removePublicFile = async (
   }
 }
 
+// Supprime un sous-dossier d'un dossier racine (ex. "staff/<slug>"). Garde-fou : au moins deux
+// segments, tous déjà "propres" (identiques à leur version assainie). Sinon un slug invalide
+// ("..", "", "%%") pourrait se réduire à la racine et effacer tout un dossier d'uploads.
 export const removePublicDir = async (publicSubdir: string): Promise<void> => {
-  const segments = sanitizeSubdir(publicSubdir)
-  if (segments.length === 0) {
-    return
+  const raw = publicSubdir.split('/')
+  const clean = raw.every((segment) => segment !== '' && segment === sanitizeName(segment))
+  if (raw.length < 2 || !clean) {
+    throw new Error('Sous-dossier à supprimer invalide')
   }
-  await rm(path.join(getPublicDir(), ...segments), { recursive: true, force: true })
+  await rm(path.join(getPublicDir(), ...raw), { recursive: true, force: true })
 }

@@ -131,10 +131,31 @@ describe('removePublicDir', () => {
     const outside = path.join(root, 'outside')
     await saveUploadedFile(img('a.png'), 'galerie', 'img')
     writeFileSync(path.join(root, 'keep.txt'), 'k')
-    await removePublicDir('../')
-    await removePublicDir('')
+    await expect(removePublicDir('../')).rejects.toThrow()
+    await expect(removePublicDir('')).rejects.toThrow()
     expect(existsSync(path.join(root, 'keep.txt'))).toBe(true)
     expect(readdirSync(publicDir)).toContain('galerie')
     expect(existsSync(outside)).toBe(false)
+  })
+
+  it.each(['staff/..', 'staff/', 'staff', 'staff\\x', 'galerie/%%', 'galerie/.', '', '../'])(
+    'refuse %j sans toucher à la racine ni aux voisins',
+    async (subdir) => {
+      await saveUploadedFile(img('a.png'), 'staff/other', 'img')
+      await saveUploadedFile(img('a.png'), 'galerie/album', 'img')
+      writeFileSync(path.join(publicDir, 'staff', 'sibling.txt'), 's')
+      await expect(removePublicDir(subdir)).rejects.toThrow()
+      expect(existsSync(path.join(publicDir, 'staff', 'sibling.txt'))).toBe(true)
+      expect(existsSync(path.join(publicDir, 'staff', 'other'))).toBe(true)
+      expect(existsSync(path.join(publicDir, 'galerie', 'album'))).toBe(true)
+    },
+  )
+
+  it('supprime un slug légitime sous staff/ sans toucher au voisin', async () => {
+    await saveUploadedFile(img('a.png'), 'staff/some-slug', 'img')
+    await saveUploadedFile(img('a.png'), 'staff/other', 'img')
+    await removePublicDir('staff/some-slug')
+    expect(existsSync(path.join(publicDir, 'staff', 'some-slug'))).toBe(false)
+    expect(existsSync(path.join(publicDir, 'staff', 'other'))).toBe(true)
   })
 })
