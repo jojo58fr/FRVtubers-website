@@ -237,6 +237,41 @@ describe('updateEvent', () => {
   })
 })
 
+describe('server-side caps and ignored blocks', () => {
+  it('caps title, summary and slug length', async () => {
+    const res = await createEvent(base({ title: 'a'.repeat(5000), summary: 'b'.repeat(5000) }), {})
+    if (!res.ok) throw new Error(res.error)
+    expect(res.event.title).toHaveLength(200)
+    expect(res.event.summary).toHaveLength(500)
+    expect(res.event.slug.length).toBeLessThanOrEqual(80)
+    expect(res.event.slug.endsWith('-')).toBe(false)
+  })
+
+  it('does not leave a trailing dash when the cut falls on a separator', async () => {
+    const title = `${'a'.repeat(79)} ${'b'.repeat(50)}`
+    const res = await createEvent(base({ title }), {})
+    if (!res.ok) throw new Error(res.error)
+    expect(res.event.slug).toBe('a'.repeat(79))
+  })
+
+  it('reports the number of ignored blocks on create and update', async () => {
+    const blocks = [
+      { id: 'a', type: 'paragraph', text: 'ok' },
+      { id: 'b', type: 'paragraph', text: '   ' },
+      { id: 'c', type: 'video', url: 'javascript:alert(1)' },
+    ]
+    const res = await createEvent(base({ blocksJson: JSON.stringify(blocks) }), {})
+    if (!res.ok) throw new Error(res.error)
+    expect(res.ignoredBlocks).toBe(2)
+    const upd = await updateEvent(res.event.id, base({ blocksJson: JSON.stringify(blocks) }), {})
+    if (!upd.ok) throw new Error(upd.error)
+    expect(upd.ignoredBlocks).toBe(2)
+    const clean = await updateEvent(res.event.id, base({ blocksJson: JSON.stringify(blocks.slice(0, 1)) }), {})
+    if (!clean.ok) throw new Error(clean.error)
+    expect(clean.ignoredBlocks).toBe(0)
+  })
+})
+
 describe('deleteEvent', () => {
   it('removes the row, its photos and both directories', async () => {
     const event = await created({}, { cover: png('c.png') })

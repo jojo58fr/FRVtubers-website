@@ -47,7 +47,18 @@ export type EventErrorCode =
 
 type DbEvent = NonNullable<Awaited<ReturnType<typeof prisma.event.findUnique>>>
 
-export type EventResult = { ok: true; event: DbEvent } | { ok: false; error: EventErrorCode }
+export type EventResult =
+  | { ok: true; event: DbEvent; /** Blocs soumis mais écartés par la validation (vides, URL non autorisée…). */ ignoredBlocks: number }
+  | { ok: false; error: EventErrorCode }
+
+// Plafonds côté serveur (le formulaire a les siens, mais ne protège de rien). Au-delà : troncature.
+export const TITLE_MAX_LENGTH = 200
+export const SUMMARY_MAX_LENGTH = 500
+// Le slug devient un nom de dossier : on le borne (et on retire un '-' final laissé par la coupe).
+export const SLUG_MAX_LENGTH = 80
+
+const makeSlug = (title: string) =>
+  slugify(title, 'evenement').slice(0, SLUG_MAX_LENGTH).replace(/-+$/, '')
 
 const fail = (error: EventErrorCode): { ok: false; error: EventErrorCode } => ({ ok: false, error })
 
@@ -66,7 +77,7 @@ type Validated = {
 }
 
 const validateFields = (input: EventInput): Validated | { error: EventErrorCode } => {
-  const title = input.title.trim()
+  const title = input.title.trim().slice(0, TITLE_MAX_LENGTH)
   if (!title) return { error: 'missing-title' }
   if (!(EVENT_TYPES as readonly string[]).includes(input.type)) return { error: 'invalid-type' }
   const startsAt = parseDay(input.startsAt)
@@ -82,7 +93,7 @@ const validateFields = (input: EventInput): Validated | { error: EventErrorCode 
     type: input.type as EventTypeValue,
     startsAt,
     endsAt,
-    summary: input.summary.trim() || null,
+    summary: input.summary.trim().slice(0, SUMMARY_MAX_LENGTH) || null,
   }
 }
 
@@ -94,7 +105,7 @@ const prefixFor = (slug: string) => `/evenements/${slug}/`
 const imagePaths = (blocks: EventBlock[]): string[] =>
   blocks.flatMap((block) => (block.type === 'image' ? [block.path] : []))
 
-type PreparedBlocks = { blocks: EventBlock[]; savedPaths: string[] } | { error: EventErrorCode }
+type PreparedBlocks = { blocks: EventBlock[]; savedPaths: string[]; ignored: number } | { error: EventErrorCode }
 
 /**
  * Parse le JSON (défensif), enregistre les images de blocs, puis ne renvoie que la sortie
@@ -143,7 +154,8 @@ const prepareBlocks = async (
     return { error: 'failed' }
   }
 
-  return { blocks: sanitizeBlocks(raws), savedPaths }
+  const blocks = sanitizeBlocks(raws)
+  return { blocks, savedPaths, ignored: raws.length - blocks.length }
 }
 
 const toJson = (blocks: EventBlock[]) => blocks as unknown as Prisma.InputJsonValue
@@ -159,7 +171,7 @@ export const createEvent = async (
   const cover = files.cover && files.cover.size > 0 ? files.cover : null
   if (cover && !isAllowedImage(cover)) return fail('invalid-image')
 
-  const slug = slugify(fields.title, 'evenement')
+  const slug = makeSlug(fields.title)
   if (await prisma.event.findUnique({ where: { slug }, select: { id: true } })) {
     return fail('duplicate-slug')
   }
@@ -169,10 +181,12 @@ export const createEvent = async (
 
   try {
     let blocks: EventBlock[] = []
+    let ignoredBlocks = 0
     if (input.hasArticle && input.blocksJson !== null) {
       const prepared = await prepareBlocks(input.blocksJson, slug, files.blockImages ?? {})
       if ('error' in prepared) return fail(prepared.error)
       blocks = prepared.blocks
+      ignoredBlocks = prepared.ignored
       saved.push(...prepared.savedPaths)
     }
 
@@ -193,7 +207,7 @@ export const createEvent = async (
         createdById,
       },
     })
-    return { ok: true, event }
+    return { ok: true, event, ignoredBlocks }
   } catch (error) {
     await cleanup()
     if (error instanceof InvalidUploadError) return fail('invalid-image')
@@ -229,12 +243,14 @@ export const updateEvent = async (
     // Choix : quand « hasArticle » est décoché (ou que le formulaire n'envoie pas de blocs),
     // les blocs stockés restent intacts en base et sur disque ; ils sont simplement ignorés
     // à l'affichage public. Recocher la case les restaure.
+    let ignoredBlocks = 0
     let blocksUpdate: { blocks: Prisma.InputJsonValue } | Record<string, never> = {}
     const toRemove: string[] = []
     if (input.hasArticle && input.blocksJson !== null) {
       const prepared = await prepareBlocks(input.blocksJson, slug, files.blockImages ?? {})
       if ('error' in prepared) return fail(prepared.error)
       saved.push(...prepared.savedPaths)
+      ignoredBlocks = prepared.ignored
       blocksUpdate = { blocks: toJson(prepared.blocks) }
       const kept = new Set(imagePaths(prepared.blocks))
       toRemove.push(...imagePaths(sanitizeBlocks(existing.blocks)).filter((p) => !kept.has(p)))
@@ -259,7 +275,7 @@ export const updateEvent = async (
     })
 
     await Promise.all(toRemove.map((p) => removePublicFile(p, [prefix])))
-    return { ok: true, event }
+    return { ok: true, event, ignoredBlocks }
   } catch (error) {
     await cleanup()
     if (error instanceof InvalidUploadError) return fail('invalid-image')
