@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { ADMIN_PANEL_PATH, requireAdminSession } from '@/lib/admin-auth'
@@ -211,6 +212,9 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
                       key={`${event.id}-${event.updatedAt}`}
                       action={updateEventAction}
                       idPrefix={`edit-${event.id}`} event={event} />
+                    <p>
+                      <Link href={`${PAGE_PATH}/${encodeURIComponent(event.id)}/photos`}>Photos</Link>
+                    </p>
                     <form action={deleteEventAction} className={styles.deleteForm}>
                       <input type="hidden" name="id" value={event.id} />
                       <label htmlFor={`delete-${event.id}`}>
