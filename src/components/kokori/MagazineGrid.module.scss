@@ -96,16 +96,25 @@
   pointer-events: none;
 }
 
+.coverContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 18px 16px;
+}
+
 .coverBadge,
 .coverIssue,
 .coverTitle {
   position: relative;
-  padding: 0 16px;
+  display: block;
+  max-width: 100%;
 }
 
 .coverBadge {
-  display: inline-block;
-  margin-top: 18px;
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -122,7 +131,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   opacity: 0.92;
-  margin-bottom: 18px;
+  line-height: 1.1;
 }
 
 .meta {

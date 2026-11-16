@@ -103,7 +103,7 @@ const removeIfLocal = async (maybePath: string | null | undefined) => {
 const redirectWithStatus = (code: keyof typeof STATUS_MESSAGES): never => {
   revalidatePath(ADMIN_PANEL_PATH)
   revalidatePath('/kokori-mag')
-  revalidatePath('/kokori-mag/[slug]')
+  revalidatePath('/kokori-mag/[slug]', 'page')
   return redirect(`${ADMIN_PANEL_PATH}/magazines?status=${encodeURIComponent(code)}`)
 }
 

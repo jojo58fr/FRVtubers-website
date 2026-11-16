@@ -6,6 +6,7 @@ import EventsSection from '../components/home/EventsSection'
 import TeamSection from '../components/home/TeamSection'
 import FinalCtaSection from '../components/home/FinalCtaSection'
 import OpenCollectiveSection from '../components/home/OpenCollectiveSection'
+import UtilsLink from '../components/home/UtilsLink'
 import SiteFooter from '../components/home/SiteFooter'
 import BackToTopButton from '../components/BackToTopButton'
 import styles from '../components/home/HomePage.module.scss'
@@ -164,6 +165,7 @@ const HomePage = async () => {
       <SiteHeader navItems={mainNavItems} />
       <main className={styles.content}>
         <HeroSection stats={stats} streamUrl={streamUrl} twitchEmbedUrl={twitchEmbedUrl} />
+        <UtilsLink />
         <CommunitySection pillars={communityPillars} />
         <OpenCollectiveSection />
         {/* <ResourcesSection resourceCards={resourceCards} />

@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     `**Plateforme** : ${payload.platforms}`,
     `**Liens** : ${payload.links}`,
     `**Réseaux** : ${payload.socials || 'N/A'}`,
-    `**Soumis par** : ${submitterLabel}`,
+    `**Soumis par** : ${session.user?.name} (${submitterLabel})`,
   ].join('\n')
 
   const response = await fetch(webhookUrl, {

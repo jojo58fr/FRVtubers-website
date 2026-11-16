@@ -32,9 +32,11 @@ const MagazineGrid = ({ magazines }: MagazineGridProps) => (
                   <img src={magazine.coverImageUrl} alt={`Couverture de ${magazine.title}`} />
                 </div>
                 <div className={styles.coverOverlay} />
-                <span className={styles.coverBadge}>Édition</span>
-                <span className={styles.coverIssue}>{magazine.issueNumber ?? 'Spécial'}</span>
-                <span className={styles.coverTitle}>Kokori Mag</span>
+                <div className={styles.coverContent}>
+                  <span className={styles.coverBadge}>Édition</span>
+                  <span className={styles.coverIssue}>{magazine.issueNumber ?? 'Spécial'}</span>
+                  <span className={styles.coverTitle}>Kokori Mag</span>
+                </div>
               </div>
               <div className={styles.meta}>
                 <h3>{magazine.title}</h3>
