@@ -21,11 +21,11 @@ Document pour Taku. Les migrations Prisma sont appliquées à la main sur le VPS
 3. `npm ci`
 4. `npm run build`
 5. `npm run prisma:deploy` (= `prisma migrate deploy`)
-6. Redémarrer le processus de l'application (pm2/systemd selon votre installation).
+6. Redémarrer le processus de l'application selon votre procédure habituelle.
 
 ## 4. Nouvelle variable d'environnement
 
-`NEXT_PUBLIC_SITE_HOSTNAME` : **nom d'hôte uniquement**, sans schéma ni port (ex. `frvtubers.com`, pas `https://frvtubers.com`). Elle sert au paramètre `parent` des lecteurs Twitch intégrés.
+`NEXT_PUBLIC_SITE_HOSTNAME` : **nom d'hôte uniquement**, sans schéma ni port (ex. `exemple.org`, pas `https://exemple.org`). Elle sert au paramètre `parent` des lecteurs Twitch intégrés.
 
 Attention : le préfixe `NEXT_PUBLIC_` signifie que la valeur est **intégrée au build**. Elle doit être définie dans `.env` (ou l'environnement) **avant `npm run build`** ; la modifier ensuite impose un nouveau build. Sans elle, le lecteur Twitch utilise `localhost` et ne s'affichera pas en production.
 
@@ -36,23 +36,29 @@ Attention : le préfixe `NEXT_PUBLIC_` signifie que la valeur est **intégrée a
 - être **accessibles en écriture par l'utilisateur qui exécute l'application** ;
 - être **inclus dans les sauvegardes régulières du VPS** (avec `public/magazines` et le fichier SQLite).
 
-## 6. Service des fichiers uploadés : à trancher
+## 6. Service des fichiers uploadés
 
-**Constat (vérifié en `npm run build` puis `next start`, Next 16.0.10)** : un fichier ajouté dans `public/` **après le démarrage** du serveur n'est **pas servi** par Next.
+**Constat (vérifié en `npm run build` puis `next start`, Next 16.0.10)** : Next.js prend un instantané de `public/` au démarrage. Un fichier ajouté dans `public/` **après** le démarrage n'est pas servi (HTTP 404), alors qu'un fichier présent au build l'est (HTTP 200).
 
-- `curl -I /galerie/verif-task11/test.png` (PNG créé après le démarrage) : **HTTP 404**, `Content-Type: text/html; charset=utf-8` (page 404 de Next).
-- `curl -I /assets/FRVtubersLogo.png` (fichier présent au build) : **HTTP 200**, `Content-Type: image/png`.
+C'est probablement aussi pourquoi les uploads du magazine n'apparaissent aujourd'hui qu'après un redémarrage (explication probable, **non vérifiée**).
 
-Conséquence : en production, les images uploadées via l'admin (photos de galerie, images d'évènements, avatars staff) renverraient 404 tant que rien d'autre ne les sert. Pas de contournement implémenté dans le code ; deux options, **à trancher** :
+**Solution retenue : l'application sert elle-même ses uploads.** Des route handlers répondent aux mêmes URL que celles stockées en base :
 
-- **A. Reverse proxy** (nginx ou équivalent) : servir directement depuis le disque les chemins `/galerie/`, `/evenements/` et `/staff/` (par ex. un `location` avec `alias` vers `<racine du projet>/public/galerie/` etc.), le reste étant transmis à Next. Aucun changement de code, et les fichiers sont servis immédiatement après upload.
-- **B. Côté code** : une route handler Next qui lit le fichier sur disque, plus des `rewrites` dans `next.config` pour y rediriger ces chemins. À décider et à implémenter par le contrôleur du projet.
+- `/galerie/<slug>/<fichier>`
+- `/evenements/<slug>/<fichier>`
+- `/staff/<slug>/<fichier>`
 
-Tant que l'option A ou B n'est pas en place, les uploads fonctionnent (fichiers écrits) mais ne s'affichent pas.
+Ils lisent le fichier sur disque (`public/<racine>/<slug>/<fichier>`) à chaque requête, n'acceptent que des noms d'images (`.jpg`, `.png`, `.webp`, `.gif`) et répondent 404 pour tout le reste (extension inconnue, tentative de sortie du dossier, fichier absent). Les réponses portent `X-Content-Type-Options: nosniff`, `Content-Security-Policy: default-src 'none'` et un `Cache-Control` long (les noms de fichiers sont uniques). Aucune configuration serveur n'est nécessaire : les images sont visibles immédiatement après l'upload.
+
+Les fichiers d'un évènement en brouillon restent accessibles par leur URL exacte (noms difficiles à deviner) ; c'est accepté.
+
+**Optionnel : nginx devant l'application.** Servir directement ces trois chemins depuis le disque (un `location` avec `alias` vers `<racine du projet>/public/galerie/`, etc.) est une simple optimisation. La route de l'application reste inoffensive derrière.
 
 ## 7. Retour arrière
 
-La migration est additive : revenir à la version précédente du code (`git checkout` du commit précédent, `npm ci`, `npm run build`, redémarrage) est sans risque. Les nouvelles tables peuvent rester en base, l'ancien code les ignore. En cas de souci majeur, restaurer le fichier SQLite sauvegardé en section 2.
+La migration est additive : les nouvelles tables peuvent rester en base, l'ancien code les ignore. Pour revenir en arrière, préférer `git revert` des commits concernés, ou redéployer le tag de la release précédente, puis `npm ci`, `npm run build` et redémarrage. Attention : `git checkout <commit>` laisse le dépôt en « detached HEAD », à éviter pour un déploiement durable.
+
+Restaurer la sauvegarde SQLite de la section 2 **efface les données écrites depuis cette sauvegarde** (nouveaux évènements, photos, comptes, etc.) : à réserver aux cas graves.
 
 ## 8. Test manuel après déploiement
 
