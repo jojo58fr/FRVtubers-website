@@ -7,5 +7,10 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    globalSetup: ['./vitest.setup.ts'],
+    // Must be set before @/lib/prisma is imported in the workers.
+    env: { DATABASE_URL: 'file:./test.db' },
+    // Test files share one SQLite file: run them one at a time.
+    fileParallelism: false,
   },
 })
