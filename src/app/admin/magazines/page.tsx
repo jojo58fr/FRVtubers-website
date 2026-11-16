@@ -1,3 +1,4 @@
+import { securityLog } from '@/lib/security-log'
 import { Prisma } from '@prisma/client'
 import { Buffer } from 'node:buffer'
 import { randomUUID } from 'node:crypto'
@@ -5,7 +6,7 @@ import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { ADMIN_PANEL_PATH, requireAdminSession } from '@/lib/admin-auth'
+import { ADMIN_PANEL_PATH, requireAdminSession, requireAdminAction } from '@/lib/admin-auth'
 import type { PlainMagazine } from '@/lib/magazines'
 import {
   MAX_COVER_SIZE_BYTES,
@@ -98,7 +99,7 @@ const removeIfLocal = async (maybePath: string | null | undefined) => {
     await unlink(absolutePath)
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      console.warn('Impossible de supprimer le fichier', absolutePath, error)
+      securityLog('error', 'admin.operation_failed')
     }
   }
 }
@@ -120,7 +121,7 @@ const handlePrismaError = (error: unknown, fallback: keyof typeof ERROR_MESSAGES
     return redirectWithError('duplicate-slug')
   }
 
-  console.error('Erreur Prisma inattendue', error)
+  securityLog('error', 'admin.operation_failed')
   return redirectWithError(fallback)
 }
 
@@ -131,7 +132,7 @@ type PageProps = {
 const createMagazineAction = async (formData: FormData) => {
   'use server'
 
-  const session = await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/magazines` })
+  const session = await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/magazines` })
 
   const rawTitle = formData.get('title')?.toString().trim() ?? ''
   if (!rawTitle) {
@@ -186,7 +187,7 @@ const createMagazineAction = async (formData: FormData) => {
 const updateMagazineAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/magazines` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/magazines` })
 
   const id = formData.get('id')?.toString()
   if (!id) {
@@ -253,7 +254,7 @@ const updateMagazineAction = async (formData: FormData) => {
 const deleteMagazineAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/magazines` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/magazines` })
 
   const id = formData.get('id')?.toString()
   if (!id) {
@@ -268,8 +269,8 @@ const deleteMagazineAction = async (formData: FormData) => {
   try {
     await prisma.magazine.delete({ where: { id } })
     await Promise.all([removeIfLocal(existing.pdfPath), removeIfLocal(existing.coverImageUrl)])
-  } catch (error) {
-    console.error('Impossible de supprimer le magazine', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('delete-failed')
   }
 

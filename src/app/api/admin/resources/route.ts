@@ -1,7 +1,8 @@
+import { securityLog } from '@/lib/security-log'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import prisma from '@/lib/prisma'
-import { authOptions } from '../../auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { isModeratorSession } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
@@ -20,6 +21,7 @@ const parseBoolean = (value: string | null) => {
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions)
   if (!isModeratorSession(session)) {
+    securityLog('warn', 'admin.access_denied')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

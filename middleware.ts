@@ -25,6 +25,17 @@ const applyCors = (response: NextResponse, origin: string | null) => {
 export function middleware(request: NextRequest) {
   const origin = request.headers.get('origin')
 
+  // Never cache cookie-dependent identity or staff data in a shared cache.
+  const response = NextResponse.next()
+  if (/^\/api\/(auth|v1\/auth|admin|user)(?:\/|$)/.test(request.nextUrl.pathname)) {
+    response.headers.set('Cache-Control', 'private, no-store')
+  }
+  // Adding cache protection must not grant other applications new CORS access
+  // to staff data or account preferences.
+  if (/^\/api\/(admin|user)(?:\/|$)/.test(request.nextUrl.pathname)) {
+    return response
+  }
+
   if (request.method === 'OPTIONS') {
     return applyCors(
       new NextResponse(null, {
@@ -34,9 +45,9 @@ export function middleware(request: NextRequest) {
     )
   }
 
-  return applyCors(NextResponse.next(), origin)
+  return applyCors(response, origin)
 }
 
 export const config = {
-  matcher: ['/api/auth/:path*', '/api/v1/auth/:path*', '/api/resources/:path*'],
+  matcher: ['/api/auth/:path*', '/api/v1/auth/:path*', '/api/resources/:path*', '/api/admin/:path*', '/api/user/:path*'],
 }

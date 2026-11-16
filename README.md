@@ -112,3 +112,39 @@ Ce projet est publié sous licence MIT. Voir [LICENSE](./LICENSE) pour plus de d
 ---
 
 💬 Besoin d’aide ou envie d’échanger ? Rejoignez-nous sur Discord : [discord.gg/meyHQYWvjU](https://discord.gg/meyHQYWvjU).
+
+
+## Sécurité de l'authentification et vérifications
+
+L'authentification utilise exclusivement Discord. Les identifiants de démonstration ne sont plus acceptés. La configuration serveur se trouve dans `src/lib/auth.ts` ; la route NextAuth expose uniquement GET/POST.
+
+À chaque validation de session, le compte et son compte OAuth Discord lié doivent encore exister en base. Une absence ou une erreur de lecture invalide l'identité de session : une reconnexion peut donc être nécessaire après une panne de base. Les rôles métier MEMBER/MODERATOR/COMITE sont conservés. `ADMIN_DISCORD_IDS` reconnaît les identifiants Discord vérifiés du compte lié, tout en conservant la compatibilité avec les identifiants internes déjà configurés. Cette exception reste prioritaire sur le rôle en base : retirer un accès de cette liste exige de modifier la configuration serveur.
+
+`session.user.id` est l'identifiant interne ; `session.user.discordId` est l'identifiant Discord. Aucun jeton OAuth n'est renvoyé dans la session publique. Les scopes Discord et le partage de session existants sont conservés ; leur minimisation reste un chantier distinct.
+
+Les candidatures vérifient côté serveur l'appartenance au serveur et le rôle déjà validé. Leur contenu est borné et les notifications de mentions Discord sont désactivées. Les mutations par cookie contrôlent aussi leur origine ; les clients serveur sans en-têtes navigateur restent compatibles.
+
+Les logs applicatifs de sécurité ne reçoivent que des noms d'événements fixes et éventuellement un statut HTTP. Même le mode NextAuth verbeux ne doit pas réintroduire profils, requêtes, erreurs brutes, URLs de redirection ou tokens. Les logs du reverse proxy/hébergeur doivent être contrôlés séparément.
+
+Les nouveaux avatars ont un nom opaque dérivé par HMAC ; les téléchargements sont limités au CDN Discord canonique, à 5 Mio et aux signatures PNG/GIF attendues. Aucun avatar historique n'est supprimé ou migré automatiquement. Les avatars restent publics ; des noms opaques ne constituent pas un contrôle d'accès. Une rotation de NEXTAUTH_SECRET peut créer de nouveaux noms sans effacer les anciennes copies.
+
+Commandes disponibles :
+
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run check:secrets -- --history
+```
+
+Les tests unitaires exécutent les modules TypeScript réels avec les I/O remplacées par des doubles : aucune base réelle, aucun webhook réel. Le contrôle de secrets compare des signatures connues et les secrets locaux en mémoire, sans les afficher, puis vérifie les bundles `.next/static` lorsqu'ils existent. L'option `--history` recherche les valeurs locales connues dans les révisions Git accessibles ; ce n'est pas une analyse exhaustive de tous les secrets historiques.
+
+Après un build, `npm run test:http` (Node >= 22.13 avec `node:sqlite`) lance uniquement un serveur sur 127.0.0.1 et utilise une nouvelle base SQLite synthétique. Il teste de vrais cookies JWT et les autorisations HTTP, puis arrête ce serveur. Les bases `prisma/security-smoke-*.db` sont ignorées par Git et ne contiennent que des fixtures. Pour valider un build sans données réelles, utiliser également une base de build isolée et des secrets factices ; ne pas exécuter de nettoyage contre la base de production.
+
+Ces vérifications ne remplacent pas un essai OAuth Discord réel avec compte de test, ni la revue des sous-domaines, contrats, sauvegardes, journaux d'infrastructure et procédures RGPD.
+
+## Pages légales en préparation
+
+Les routes `/confidentialite` et `/mentions-legales` sont des documents de travail en français, accessibles depuis le pied de page. Les formulaires de contact et de candidature affichent une information sur les données ; la connexion passe par `/login` pour présenter l’information avant l’autorisation Discord. Aucune case d’acceptation globale du RGPD n’est ajoutée.
+
+**Ne pas publier ces textes en l’état.** Compléter les marqueurs `[À COMPLÉTER]`, confirmer les bases légales et vérifier l’identité de l’éditeur, du responsable et de l’hébergeur, les destinataires, durées et garanties des prestataires avant publication. Le bandeau de brouillon et `noindex` signalent ce statut ; ils ne constituent ni un contrôle d’accès ni un mécanisme bloquant de déploiement. Les rapports et la liste des informations à valider sont conservés localement dans `docs/rgpd/`, actuellement ignoré par Git : prévoir leur sauvegarde dans un espace privé séparé. Les pages ne règlent pas à elles seules les traceurs, la conservation ou l’exercice des droits.

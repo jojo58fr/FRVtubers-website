@@ -60,7 +60,7 @@ export default function UserSettingsForm({ initialPreferences }: Props) {
       setMessage('Préférences sauvegardées avec succès.')
       setIsDirty(false)
     } catch (error) {
-      console.error(error)
+      console.error('La requête a échoué')
       setStatus('error')
       setMessage(error instanceof Error ? error.message : 'Une erreur est survenue.')
     }

@@ -1,3 +1,4 @@
+import { securityLog } from '@/lib/security-log'
 import SiteHeader from '../components/home/SiteHeader'
 import HeroSection from '../components/home/HeroSection'
 import CommunitySection from '../components/home/CommunitySection'
@@ -40,14 +41,14 @@ async function fetchDiscordPresenceCount(): Promise<number | null> {
     })
 
     if (!response.ok) {
-      console.error('Discord widget responded with', response.status)
+      securityLog('error', 'auth.membership_failed')
       return null
     }
 
     const data = await response.json()
     return typeof data?.presence_count === 'number' ? data.presence_count : null
-  } catch (error) {
-    console.error('Failed to fetch Discord widget data', error)
+  } catch {
+    securityLog('error', 'auth.membership_failed')
     return null
   }
 }

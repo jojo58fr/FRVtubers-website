@@ -1,3 +1,4 @@
+import { securityLog } from '@/lib/security-log'
 import { cache } from 'react'
 import prisma from './prisma'
 
@@ -131,8 +132,8 @@ export async function deleteMagazine(id: string): Promise<PlainMagazine | null> 
       where: { id },
     })
     return toPlainMagazine(deleted)
-  } catch (error) {
-    console.error('Failed to delete magazine', error)
+  } catch {
+    securityLog('error', 'storage.operation_failed')
     return null
   }
 }

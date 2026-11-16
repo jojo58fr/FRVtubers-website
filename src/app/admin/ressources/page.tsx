@@ -1,6 +1,7 @@
+import { securityLog } from '@/lib/security-log'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { ADMIN_PANEL_PATH, requireAdminSession } from '@/lib/admin-auth'
+import { ADMIN_PANEL_PATH, requireAdminSession, requireAdminAction } from '@/lib/admin-auth'
 import type { PlainResourceSubmission, ResourceLanguage, ResourceTag } from '@/lib/resources'
 import { RESOURCE_SUBMISSIONS_SAMPLE } from '@/lib/resources'
 import prisma from '@/lib/prisma'
@@ -106,7 +107,7 @@ const slugifyTagLabel = (value: string) =>
 const updateStatusAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const id = formData.get('id')?.toString()
   const status = formData.get('status')?.toString()
@@ -141,8 +142,8 @@ const updateStatusAction = async (formData: FormData) => {
     if (status === 'APPROVED' && existing.status !== 'APPROVED') {
       await notifyResourcePublished(updated)
     }
-  } catch (error) {
-    console.error('Impossible de mettre à jour la ressource', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('update-failed')
   }
 
@@ -152,7 +153,7 @@ const updateStatusAction = async (formData: FormData) => {
 const toggleFeaturedAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const id = formData.get('id')?.toString()
   const featured = parseBoolean(formData.get('featured'))
@@ -178,8 +179,8 @@ const toggleFeaturedAction = async (formData: FormData) => {
       where: { id },
       data: { featured },
     })
-  } catch (error) {
-    console.error('Impossible de mettre en avant la ressource', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('update-failed')
   }
 
@@ -189,7 +190,7 @@ const toggleFeaturedAction = async (formData: FormData) => {
 const deleteResourceAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const id = formData.get('id')?.toString()
   if (!id) {
@@ -198,8 +199,8 @@ const deleteResourceAction = async (formData: FormData) => {
 
   try {
     await prisma.resourceSubmission.delete({ where: { id } })
-  } catch (error) {
-    console.error('Impossible de supprimer la ressource', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('delete-failed')
   }
 
@@ -209,7 +210,7 @@ const deleteResourceAction = async (formData: FormData) => {
 const createResourceAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const submitterName = parseOptionalString(formData.get('submitterName'))
   const submitterEmail = parseOptionalString(formData.get('submitterEmail'))
@@ -283,8 +284,8 @@ const createResourceAction = async (formData: FormData) => {
     })
 
     await notifyResourcePublished(created)
-  } catch (error) {
-    console.error('Impossible de créer la ressource', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('update-failed')
   }
 
@@ -294,7 +295,7 @@ const createResourceAction = async (formData: FormData) => {
 const updateResourceAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const id = formData.get('id')?.toString()
   if (!id) {
@@ -354,8 +355,8 @@ const updateResourceAction = async (formData: FormData) => {
         },
       },
     })
-  } catch (error) {
-    console.error('Impossible de mettre à jour la ressource', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('update-failed')
   }
 
@@ -365,7 +366,7 @@ const updateResourceAction = async (formData: FormData) => {
 const createTagAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const label = formData.get('label')?.toString().trim() ?? ''
   if (!label) {
@@ -386,8 +387,8 @@ const createTagAction = async (formData: FormData) => {
     await prisma.resourceTag.create({
       data: { label, slug },
     })
-  } catch (error) {
-    console.error('Impossible de créer le tag', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('update-failed')
   }
 
@@ -397,7 +398,7 @@ const createTagAction = async (formData: FormData) => {
 const deleteTagAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const id = formData.get('id')?.toString()
   if (!id) {
@@ -406,8 +407,8 @@ const deleteTagAction = async (formData: FormData) => {
 
   try {
     await prisma.resourceTag.delete({ where: { id } })
-  } catch (error) {
-    console.error('Impossible de supprimer le tag', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('delete-failed')
   }
 
@@ -417,7 +418,7 @@ const deleteTagAction = async (formData: FormData) => {
 const updateTagAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const id = formData.get('id')?.toString()
   const label = formData.get('label')?.toString().trim() ?? ''
@@ -452,8 +453,8 @@ const updateTagAction = async (formData: FormData) => {
         slug: nextSlug,
       },
     })
-  } catch (error) {
-    console.error('Impossible de mettre à jour le tag', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('update-failed')
   }
 
@@ -463,7 +464,7 @@ const updateTagAction = async (formData: FormData) => {
 const updateTagsAction = async (formData: FormData) => {
   'use server'
 
-  await requireAdminSession({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
+  await requireAdminAction({ redirectTo: `${ADMIN_PANEL_PATH}/ressources` })
 
   const id = formData.get('id')?.toString()
   if (!id) {
@@ -484,8 +485,8 @@ const updateTagsAction = async (formData: FormData) => {
         },
       },
     })
-  } catch (error) {
-    console.error('Impossible de mettre à jour les tags', error)
+  } catch {
+    securityLog('error', 'admin.operation_failed')
     return redirectWithError('update-failed')
   }
 

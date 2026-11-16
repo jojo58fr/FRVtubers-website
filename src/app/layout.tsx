@@ -43,8 +43,8 @@ export default function RootLayout({
       : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     root.classList.toggle('dark', theme === 'dark');
     root.setAttribute('data-theme', theme);
-  } catch (error) {
-    console.warn('Unable to apply saved theme preference', error);
+  } catch {
+    console.warn('Unable to apply saved theme preference');
   }
 })();`.replace('</script>', '<\\/script>')
 

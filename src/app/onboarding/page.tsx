@@ -5,7 +5,7 @@ import SiteFooter from '../../components/home/SiteFooter'
 import BackToTopButton from '../../components/BackToTopButton'
 import OnboardingForm from '../../components/onboarding/OnboardingForm'
 import styles from '../../components/onboarding/Onboarding.module.scss'
-import { authOptions } from '../api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 import { mainNavItems } from '@/lib/navigation'
@@ -21,7 +21,7 @@ export const metadata = {
 const OnboardingPage = async () => {
   const session = await getServerSession(authOptions)
 
-  if (!session) {
+  if (!session?.user?.id) {
     redirect('/login?callbackUrl=/onboarding')
   }
 
@@ -68,7 +68,7 @@ const OnboardingPage = async () => {
             salon <strong>🎫｜support</strong>.
           </p>
 
-          {isGuildMember ? (
+          {isGuildMember && !isPending ? (
             <OnboardingForm hasVtuberRole={hasVtuberRole} />
           ) : membershipUnknown ? (
             <p className={styles.membershipAlert}>

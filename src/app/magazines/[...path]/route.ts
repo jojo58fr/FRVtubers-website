@@ -1,3 +1,4 @@
+import { securityLog } from '@/lib/security-log'
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import path from 'node:path'
@@ -79,7 +80,7 @@ const serveMagazineFile = async (request: Request, context: RouteContext, headOn
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return new Response('Not Found', { status: 404 })
     }
-    console.error('Impossible de lire le fichier du magazine', absolutePath, error)
+    securityLog('error', 'storage.operation_failed')
     return new Response('Internal Server Error', { status: 500 })
   }
 

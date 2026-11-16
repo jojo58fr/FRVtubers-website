@@ -4,7 +4,7 @@ import Link from 'next/link'
 import SiteHeader from '@/components/home/SiteHeader'
 import SiteFooter from '@/components/home/SiteFooter'
 import BackToTopButton from '@/components/BackToTopButton'
-import { authOptions } from '../api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import styles from './profile.module.scss'
 import { DEFAULT_PREFERENCES } from '@/lib/user-preferences'
 import { mainNavItems } from '@/lib/navigation'
@@ -12,7 +12,7 @@ import { mainNavItems } from '@/lib/navigation'
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions)
 
-  if (!session) {
+  if (!session?.user?.id) {
     redirect(`/login?callbackUrl=${encodeURIComponent('/profile')}`)
   }
 
@@ -36,7 +36,12 @@ export default async function ProfilePage() {
             </div>
             <div>
               <h1 className={styles.title}>{user?.name ?? 'Membre FRVtubers'}</h1>
-              {user?.email && <p className={styles.subtitle}>{user.email}</p>}
+              {user?.email && (
+                <p className={styles.subtitle}>
+                  {user.email.slice(0, Math.min(3, user.email.indexOf('@')))}
+                  {user.email.slice(Math.min(3, user.email.indexOf('@'))).replace(/[^@.]/g, '*')}
+                </p>
+              )}
               <div className={styles.badges}>
                 {isGuildMember && <span className={styles.badge}>Membre Discord</span>}
                 {hasVtuberRole && <span className={styles.badgeHighlight}>Role VTuber validé</span>}
@@ -55,7 +60,7 @@ export default async function ProfilePage() {
           <ul className={styles.list}>
             <li>
               <span className={styles.listLabel}>Identifiant Discord</span>
-              <span className={styles.listValue}>{user?.id ?? 'Non communiqué'}</span>
+              <span className={styles.listValue}>{user?.discordId ?? 'Non communiqué'}</span>
             </li>
             <li>
               <span className={styles.listLabel}>Presence sur le serveur</span>

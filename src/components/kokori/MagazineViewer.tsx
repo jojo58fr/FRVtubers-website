@@ -310,8 +310,8 @@ const MagazineViewer = ({ file, title, defaultNativeView = false }: MagazineView
     pendingPageRef.current = null
   }
 
-  const handleDocumentError = useCallback((error: Error) => {
-    console.error('Failed to load Kokori Mag PDF', error)
+  const handleDocumentError = useCallback(() => {
+    console.error('Failed to load Kokori Mag PDF')
     setLoadError("Le magazine n'a pas pu etre charge. Verifiez le fichier PDF.")
     setPdfDocument(null)
     setPreviewState(null)

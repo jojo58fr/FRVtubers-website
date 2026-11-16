@@ -1,3 +1,4 @@
+import { securityLog } from '@/lib/security-log'
 type ResourceWebhookPayload = {
   id: string
   assetTitle: string
@@ -24,6 +25,7 @@ export const notifyResourcePublished = async (resource: ResourceWebhookPayload) 
   const resourceUrl = buildResourceUrl(resource)
   const payload = {
     content: `Nouveau asset sur le site FRVResources: **${resource.assetTitle}**.`,
+    allowed_mentions: { parse: [] },
     components: [
       {
         type: 1,
@@ -44,12 +46,13 @@ export const notifyResourcePublished = async (resource: ResourceWebhookPayload) 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(10_000),
     })
 
     if (!response.ok) {
-      console.error("Impossible d'envoyer le webhook FRVResources", await response.text())
+      securityLog('warn', 'discord.webhook_failed', response.status)
     }
-  } catch (error) {
-    console.error("Erreur lors de l'envoi du webhook FRVResources", error)
+  } catch {
+    securityLog('error', 'discord.webhook_failed')
   }
 }

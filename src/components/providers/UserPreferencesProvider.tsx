@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useSession } from 'next-auth/react'
+import { hasSessionIdentity } from '@/lib/session-identity'
 import {
   DEFAULT_PREFERENCES,
   mergePreferences,
@@ -66,6 +67,7 @@ const applyLanguage = (language: SupportedLanguage) => {
 
 export function UserPreferencesProvider({ children }: ProviderProps) {
   const { data: session, status, update } = useSession()
+  const isAuthenticated = status === 'authenticated' && hasSessionIdentity(session)
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES)
   const [isUpdating, setIsUpdating] = useState(false)
   const previousPreferences = useRef<UserPreferences>(preferences)
@@ -77,13 +79,13 @@ export function UserPreferencesProvider({ children }: ProviderProps) {
   }, [preferences])
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.preferences) {
+    if (isAuthenticated && session?.preferences) {
       setPreferences(session.preferences)
       hasRestoredLocalRef.current = true
       return
     }
 
-    if (status === 'unauthenticated') {
+    if (status !== 'loading' && !isAuthenticated) {
       setPreferences(mergePreferences(DEFAULT_PREFERENCES, readLocalPreferences()))
       hasRestoredLocalRef.current = true
       return
@@ -93,7 +95,7 @@ export function UserPreferencesProvider({ children }: ProviderProps) {
       setPreferences(mergePreferences(DEFAULT_PREFERENCES, readLocalPreferences()))
       hasRestoredLocalRef.current = true
     }
-  }, [status, session?.preferences])
+  }, [status, isAuthenticated, session?.preferences])
 
   const persistLocally = useCallback((next: UserPreferences) => {
     if (typeof window === 'undefined') {
@@ -109,7 +111,7 @@ export function UserPreferencesProvider({ children }: ProviderProps) {
       previousPreferences.current = preferences
       setPreferences(nextPreferences)
 
-      if (status !== 'authenticated') {
+      if (!isAuthenticated) {
         persistLocally(nextPreferences)
         return
       }
@@ -133,14 +135,14 @@ export function UserPreferencesProvider({ children }: ProviderProps) {
         await update({ preferences: nextPreferences })
         persistLocally(nextPreferences)
       } catch (error) {
-        console.error(error)
+        console.error('La requête a échoué')
         setPreferences(previousPreferences.current)
         throw error
       } finally {
         setIsUpdating(false)
       }
     },
-    [persistLocally, preferences, status, update],
+    [persistLocally, preferences, isAuthenticated, update],
   )
 
   const updateTheme = useCallback(

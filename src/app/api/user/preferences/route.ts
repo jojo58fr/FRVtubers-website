@@ -1,106 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { getToken, encode } from 'next-auth/jwt'
-import { authOptions } from '../../auth/[...nextauth]/route'
-import { DEFAULT_PREFERENCES, mergePreferences, type UserPreferences } from '@/lib/user-preferences'
+import { authOptions } from '@/lib/auth'
+import { DEFAULT_PREFERENCES, mergePreferences } from '@/lib/user-preferences'
+import { isTrustedMutation, readJsonObject } from '@/lib/request-security'
+import { securityLog } from '@/lib/security-log'
 import prisma from '@/lib/prisma'
-
-const nextAuthSecret = process.env.NEXTAUTH_SECRET!
-
-if (!nextAuthSecret) {
-  throw new Error('NEXTAUTH_SECRET is required to handle user preferences.')
-}
-
-const SESSION_COOKIE_NAME = 'next-auth.session-token'
-const SESSION_COOKIE_NAME_SECURE = '__Secure-next-auth.session-token'
-
-const determineCookieName = (request: NextRequest) => {
-  const forwardedProto = request.headers.get('x-forwarded-proto')
-  const isSecure =
-    forwardedProto === 'https' ||
-    request.nextUrl.protocol === 'https:' ||
-    process.env.NEXTAUTH_URL?.startsWith('https://')
-
-  return isSecure ? SESSION_COOKIE_NAME_SECURE : SESSION_COOKIE_NAME
-}
-
-const getCookieOptions = (request: NextRequest) => {
-  const maxAge = authOptions.session?.maxAge ?? 30 * 24 * 60 * 60
-  const isSecure =
-    request.headers.get('x-forwarded-proto') === 'https' ||
-    request.nextUrl.protocol === 'https:' ||
-    process.env.NEXTAUTH_URL?.startsWith('https://')
-
-  return {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: isSecure,
-    path: '/',
-    maxAge,
-  }
-}
 
 export async function GET() {
   const session = await getServerSession(authOptions)
-
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
-
-  const preferences = session.preferences ?? DEFAULT_PREFERENCES
-  return NextResponse.json({ preferences })
+  return NextResponse.json({ preferences: session.preferences ?? DEFAULT_PREFERENCES }, {
+    headers: { 'Cache-Control': 'private, no-store' },
+  })
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(request: Request) {
   const session = await getServerSession(authOptions)
-
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
   }
-
-  const token = await getToken({ req: request, secret: nextAuthSecret })
-
-  if (!token || !token.sub) {
-    return NextResponse.json({ error: 'Session invalide' }, { status: 401 })
+  if (!isTrustedMutation(request)) {
+    return NextResponse.json({ error: 'Origine non autorisée' }, { status: 403 })
   }
-
-  let payload: Partial<UserPreferences>
-
+  let payload: Record<string, unknown>
   try {
-    payload = (await request.json()) as Partial<UserPreferences>
-  } catch {
-    return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 })
-  }
-
-  const nextPreferences = mergePreferences(token.userPreferences ?? DEFAULT_PREFERENCES, payload)
-
-  try {
-    await prisma.user.update({
-      where: { id: token.sub },
-      data: {
-        theme: nextPreferences.theme,
-        language: nextPreferences.language,
-      },
-    })
+    payload = await readJsonObject(request)
   } catch (error) {
-    console.error('Failed to persist user preferences in database', error)
-    return NextResponse.json({ error: 'Impossible de sauvegarder les pr�f�rences' }, { status: 500 })
+    return NextResponse.json({ error: 'Corps de requête invalide' }, {
+      status: error instanceof RangeError ? 413 : 400,
+    })
   }
-
-  token.userPreferences = nextPreferences
-
-  const encoded = await encode({
-    token: {
-      ...token,
-      userPreferences: nextPreferences,
-    },
-    secret: nextAuthSecret,
-    maxAge: authOptions.session?.maxAge ?? 30 * 24 * 60 * 60,
+  const preferences = mergePreferences(session.preferences ?? DEFAULT_PREFERENCES, {
+    ...(payload.theme === 'dark' || payload.theme === 'light' ? { theme: payload.theme } : {}),
+    ...(payload.language === 'fr' || payload.language === 'en' ? { language: payload.language } : {}),
   })
-
-  const response = NextResponse.json({ preferences: nextPreferences })
-
-  response.cookies.set(determineCookieName(request), encoded, getCookieOptions(request))
-
-  return response
+  try {
+    await prisma.user.update({ where: { id: session.user.id }, data: preferences })
+  } catch {
+    securityLog('error', 'auth.preferences_save_failed')
+    return NextResponse.json({ error: 'Impossible de sauvegarder les préférences' }, { status: 500 })
+  }
+  // NextAuth alone manages the session cookie, including its domain and chunks.
+  return NextResponse.json({ preferences }, { headers: { 'Cache-Control': 'private, no-store' } })
 }

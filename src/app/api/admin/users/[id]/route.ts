@@ -1,7 +1,9 @@
+import { isTrustedMutation, readJsonObject } from '@/lib/request-security'
+import { securityLog } from '@/lib/security-log'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import prisma from '@/lib/prisma'
-import { authOptions } from '../../../auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { isComiteSession, isModeratorSession } from '@/lib/admin-auth'
 import { ADMIN_ROLE_METADATA, isValidAdminRole } from '@/lib/admin-roles'
 
@@ -13,7 +15,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   const session = await getServerSession(authOptions)
 
   if (!isComiteSession(session)) {
+    securityLog('warn', 'admin.access_denied')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (!isTrustedMutation(request)) {
+    securityLog('warn', 'admin.access_denied')
+    return NextResponse.json({ error: 'Origine non autorisée' }, { status: 403 })
   }
 
   const { id } = await context.params
@@ -23,7 +31,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   let payload: unknown
   try {
-    payload = await request.json()
+    payload = await readJsonObject(request)
   } catch {
     return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 })
   }
@@ -68,6 +76,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     },
   })
 
+  securityLog('info', 'admin.role_changed')
   return NextResponse.json({
     user: {
       ...updated,
@@ -80,6 +89,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   const session = await getServerSession(authOptions)
 
   if (!isComiteSession(session)) {
+    securityLog('warn', 'admin.access_denied')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

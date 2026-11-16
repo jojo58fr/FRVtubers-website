@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // Temporary containment for the installed Next/sharp image-decoder
+    // advisories. Serve original images until the affected dependencies have
+    // been upgraded and reviewed; the public optimizer endpoint is disabled.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

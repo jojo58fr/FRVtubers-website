@@ -307,3 +307,14 @@ En cas de probl\u00e8me, contr\u00f4lez :
 - Les variables d'environnement (notamment `NEXTAUTH_URL`).
 - Les scopes autoris\u00e9s c\u00f4t\u00e9 Discord (`identify email guilds guilds.members.read`).
 - Les erreurs dans vos logs Next.js (`npm run dev` affiche les erreurs d'OAuth ou de webhook).
+
+
+## Contrat de securite de la session (15 novembre 2026)
+
+- Seul le fournisseur Discord est disponible ; aucun acces a identifiants fixes.
+- `session.user.id` est le CUID interne. `session.user.discordId` est l'identifiant Discord verifie du compte OAuth lie. Corriger cette distinction dans l'interpretation des exemples plus anciens ci-dessus.
+- La session publique ne contient ni access token, ni refresh token, ni secret. Les applications clientes ne doivent pas recevoir NEXTAUTH_SECRET pour lire la session HTTP.
+- Un compte absent, sans liaison OAuth Discord ou non verifiable en base ne donne plus d'identite utilisable, meme avec un ancien JWT staff. Les reponses privees ne doivent pas etre mises en cache.
+- La route preferences ecrit uniquement pour l'utilisateur de la session serveur et ne reecrit plus manuellement le cookie JWT. Les clients peuvent continuer a appeler `useSession().update()`.
+- POST candidature exige cote serveur l'appartenance Discord et l'absence de role deja valide, comme l'interface. Les champs sont des chaines bornees ; `socials` est facultatif. Les notifications de mentions sont desactivees.
+- Les mutations sensibles controlent Origin. Les clients navigateur externes doivent utiliser une origine autorisee ; CORS ne remplace pas les controles d'identite et de role. Aucun nouvel acces CORS aux routes admin n'est accorde.

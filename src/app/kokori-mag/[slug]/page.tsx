@@ -7,7 +7,7 @@ import SiteFooter from '../../../components/home/SiteFooter'
 import BackToTopButton from '../../../components/BackToTopButton'
 import MagazineViewerWrapper from '../../../components/kokori/MagazineViewerWrapper'
 import { fetchMagazineBySlug } from '../../../lib/magazines'
-import { authOptions } from '../../api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import styles from './page.module.scss'
 import { mainNavItems } from '@/lib/navigation'
 
