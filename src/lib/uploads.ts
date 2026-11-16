@@ -10,6 +10,35 @@ const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'i
 // Résolu à chaque appel pour pouvoir être surchargé (PUBLIC_DIR) dans les tests.
 const getPublicDir = () => path.resolve(process.env.PUBLIC_DIR || path.join(process.cwd(), 'public'))
 
+export class InvalidUploadError extends Error {}
+
+// Extension dérivée UNIQUEMENT du type MIME autorisé, jamais du nom envoyé par le client.
+const EXTENSION_BY_TYPE: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+}
+
+const startsWithBytes = (buffer: Buffer, bytes: number[], offset = 0) =>
+  buffer.length >= offset + bytes.length && bytes.every((b, i) => buffer[offset + i] === b)
+
+// Vérification légère des octets de tête par rapport au type déclaré.
+const matchesMagic = (type: string, buffer: Buffer): boolean => {
+  switch (type) {
+    case 'image/png':
+      return startsWithBytes(buffer, [0x89, 0x50, 0x4e, 0x47])
+    case 'image/jpeg':
+      return startsWithBytes(buffer, [0xff, 0xd8, 0xff])
+    case 'image/gif':
+      return startsWithBytes(buffer, [0x47, 0x49, 0x46, 0x38])
+    case 'image/webp':
+      return startsWithBytes(buffer, [0x52, 0x49, 0x46, 0x46]) && startsWithBytes(buffer, [0x57, 0x45, 0x42, 0x50], 8)
+    default:
+      return false
+  }
+}
+
 export const isAllowedImage = (file: File): boolean =>
   ALLOWED_IMAGE_TYPES.has(file.type) && file.size <= IMAGE_MAX_BYTES
 
@@ -35,14 +64,21 @@ export const saveUploadedFile = async (
     throw new Error('Sous-dossier de destination invalide')
   }
 
+  const extension = EXTENSION_BY_TYPE[file.type]
+  if (!extension) {
+    throw new InvalidUploadError('Type de fichier non autorisé')
+  }
+  const buffer = Buffer.from(await file.arrayBuffer())
+  if (!matchesMagic(file.type, buffer)) {
+    throw new InvalidUploadError('Le contenu du fichier ne correspond pas à son type')
+  }
+
   const safeBase = sanitizeName(baseName) || 'file'
-  const rawExt = path.extname(file.name).toLowerCase()
-  const extension = /^\.[a-z0-9]{1,5}$/.test(rawExt) ? rawExt : ''
   const filename = `${safeBase}-${Date.now()}-${randomUUID().slice(0, 6)}${extension}`
 
   const directory = path.join(getPublicDir(), ...segments)
   await mkdir(directory, { recursive: true })
-  await writeFile(path.join(directory, filename), Buffer.from(await file.arrayBuffer()))
+  await writeFile(path.join(directory, filename), buffer)
 
   return { publicPath: `/${[...segments, filename].join('/')}` }
 }

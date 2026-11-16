@@ -148,8 +148,20 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
     coverImagePath: row.coverImagePath,
     hasArticle: row.hasArticle,
     published: row.published,
+    updatedAt: row.updatedAt.toISOString(),
     blocks: sanitizeBlocks(row.blocks),
   }))
+
+  // Les formulaires sont des composants client dont l'état (blocs, champs fichier) n'est lu
+  // qu'une fois. Après une sauvegarde, la redirection est une navigation douce qui conserverait
+  // cet état périmé (image « path » vide, anciens fichiers) et une 2e sauvegarde supprimerait
+  // des images. On force donc un remontage quand les données serveur changent : clé = updatedAt
+  // pour chaque formulaire d'édition, clé = id de l'évènement le plus récemment créé pour le
+  // formulaire de création.
+  const newestCreatedId = rows.reduce<(typeof rows)[number] | null>(
+    (newest, row) => (!newest || row.createdAt > newest.createdAt ? row : newest),
+    null,
+  )?.id ?? 'none'
 
   return (
     <div className={styles.page}>
@@ -171,7 +183,7 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
         <h2 id="create-heading" className={styles.panelTitle}>
           Nouvel évènement
         </h2>
-        <EventForm action={createEventAction} idPrefix="create" />
+        <EventForm key={`create-${newestCreatedId}`} action={createEventAction} idPrefix="create" />
       </section>
 
       <section aria-labelledby="list-heading">
@@ -195,7 +207,10 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
                     </span>
                   </summary>
                   <div className={styles.itemBody}>
-                    <EventForm action={updateEventAction} idPrefix={`edit-${event.id}`} event={event} />
+                    <EventForm
+                      key={`${event.id}-${event.updatedAt}`}
+                      action={updateEventAction}
+                      idPrefix={`edit-${event.id}`} event={event} />
                     <form action={deleteEventAction} className={styles.deleteForm}>
                       <input type="hidden" name="id" value={event.id} />
                       <label htmlFor={`delete-${event.id}`}>

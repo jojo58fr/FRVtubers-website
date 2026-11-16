@@ -19,8 +19,11 @@ afterEach(async () => {
   delete process.env.PUBLIC_DIR
 })
 
-const png = (name = 'a.png', size = 8) =>
-  new File([new Uint8Array(size)], name, { type: 'image/png' })
+const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+const png = (name = 'a.png', size = 16) =>
+  new File([new Uint8Array([...PNG_MAGIC, ...new Array(size - PNG_MAGIC.length).fill(0)])], name, {
+    type: 'image/png',
+  })
 
 const base = (over: Partial<EventInput> = {}): EventInput => ({
   title: 'Genesis Été 2026',
@@ -80,6 +83,16 @@ describe('createEvent', () => {
     expect(await createEvent(base(), { cover: big })).toEqual({ ok: false, error: 'invalid-image' })
     const pdf = new File([new Uint8Array(8)], 'x.pdf', { type: 'application/pdf' })
     expect(await createEvent(base(), { cover: pdf })).toEqual({ ok: false, error: 'invalid-image' })
+    expect(await prisma.event.count()).toBe(0)
+    expect(await ls('evenements')).toEqual([])
+  })
+
+  it('rejects an upload whose bytes do not match its type and writes nothing', async () => {
+    const fake = new File(['<html></html>'], 'x.png', { type: 'image/png' })
+    expect(await createEvent(base(), { cover: fake })).toEqual({ ok: false, error: 'invalid-image' })
+    const blocks = [{ id: 'img1', type: 'image', path: '' }]
+    const res = await createEvent(base({ blocksJson: JSON.stringify(blocks) }), { blockImages: { img1: fake } })
+    expect(res).toEqual({ ok: false, error: 'invalid-image' })
     expect(await prisma.event.count()).toBe(0)
     expect(await ls('evenements')).toEqual([])
   })

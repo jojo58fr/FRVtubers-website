@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client'
 import { sanitizeBlocks, type EventBlock } from '@/lib/event-blocks'
 import prisma from '@/lib/prisma'
 import { slugify } from '@/lib/slug'
-import { isAllowedImage, removePublicDir, removePublicFile, saveUploadedFile } from '@/lib/uploads'
+import { InvalidUploadError, isAllowedImage, removePublicDir, removePublicFile, saveUploadedFile } from '@/lib/uploads'
 
 // Logique métier de l'admin évènements, sur des entrées simples (testable sans session).
 // Les server actions de la page se limitent à l'authentification, au parsing du FormData
@@ -137,8 +137,9 @@ const prepareBlocks = async (
       raw.path = publicPath
     }
   } catch (error) {
-    console.error('Enregistrement des images de blocs impossible', error)
     await Promise.all(savedPaths.map((p) => removePublicFile(p, [prefix])))
+    if (error instanceof InvalidUploadError) return { error: 'invalid-image' }
+    console.error('Enregistrement des images de blocs impossible', error)
     return { error: 'failed' }
   }
 
@@ -195,6 +196,7 @@ export const createEvent = async (
     return { ok: true, event }
   } catch (error) {
     await cleanup()
+    if (error instanceof InvalidUploadError) return fail('invalid-image')
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return fail('duplicate-slug')
     }
@@ -260,6 +262,7 @@ export const updateEvent = async (
     return { ok: true, event }
   } catch (error) {
     await cleanup()
+    if (error instanceof InvalidUploadError) return fail('invalid-image')
     console.error('Mise à jour de l’évènement impossible', error)
     return fail('failed')
   }

@@ -17,6 +17,7 @@ export type PlainAdminEvent = {
   coverImagePath: string | null
   hasArticle: boolean
   published: boolean
+  updatedAt: string
   blocks: EventBlock[]
 }
 

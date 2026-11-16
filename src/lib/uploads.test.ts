@@ -10,6 +10,15 @@ import {
   saveUploadedFile,
 } from './uploads'
 
+const MAGIC: Record<string, number[]> = {
+  'image/png': [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+  'image/jpeg': [0xff, 0xd8, 0xff, 0xe0],
+  'image/gif': [0x47, 0x49, 0x46, 0x38, 0x39, 0x61],
+  'image/webp': [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50],
+}
+const img = (name = 'a.png', type = 'image/png') =>
+  new File([new Uint8Array([...MAGIC[type], 1, 2, 3])], name, { type })
+
 let root: string
 let publicDir: string
 
@@ -44,14 +53,14 @@ describe('isAllowedImage', () => {
 
 describe('saveUploadedFile', () => {
   it('écrit sous public/<subdir> avec un nom généré', async () => {
-    const file = new File(['hello'], 'photo.PNG', { type: 'image/png' })
+    const file = img('photo.PNG')
     const { publicPath } = await saveUploadedFile(file, 'galerie/test', 'cover')
     expect(publicPath).toMatch(/^\/galerie\/test\/cover-\d+-[0-9a-f]{6}\.png$/)
     expect(existsSync(path.join(publicDir, publicPath))).toBe(true)
   })
 
   it('neutralise les ../ dans baseName et subdir', async () => {
-    const file = new File(['hello'], 'photo.png', { type: 'image/png' })
+    const file = img('photo.png')
     const { publicPath } = await saveUploadedFile(file, 'galerie/test', '../../etc')
     expect(publicPath.startsWith('/galerie/test/')).toBe(true)
     expect(publicPath).not.toContain('..')
@@ -63,9 +72,32 @@ describe('saveUploadedFile', () => {
   })
 })
 
+describe('saveUploadedFile : sécurité du type', () => {
+  it('dérive l’extension du type MIME, pas du nom', async () => {
+    const { publicPath } = await saveUploadedFile(img('x.html'), 'evenements/t', 'b')
+    expect(publicPath).toMatch(/\.png$/)
+    expect(existsSync(path.join(publicDir, publicPath))).toBe(true)
+    const jpg = await saveUploadedFile(img('x.svg', 'image/jpeg'), 'evenements/t', 'b')
+    expect(jpg.publicPath).toMatch(/\.jpg$/)
+  })
+
+  it('refuse un fichier déclaré png dont le contenu est du HTML, sans rien écrire', async () => {
+    const html = new File(['<script>alert(1)</script>'], 'x.png', { type: 'image/png' })
+    await expect(saveUploadedFile(html, 'evenements/t', 'b')).rejects.toThrow()
+    expect(existsSync(path.join(publicDir, 'evenements'))).toBe(false)
+  })
+
+  it('refuse image/svg+xml et un type absent', async () => {
+    const svg = new File(['<svg/>'], 'x.svg', { type: 'image/svg+xml' })
+    await expect(saveUploadedFile(svg, 'evenements/t', 'b')).rejects.toThrow()
+    await expect(saveUploadedFile(new File(['x'], 'a.png'), 'evenements/t', 'b')).rejects.toThrow()
+    expect(existsSync(path.join(publicDir, 'evenements'))).toBe(false)
+  })
+})
+
 describe('removePublicFile', () => {
   it('supprime un fichier sous un préfixe autorisé', async () => {
-    const { publicPath } = await saveUploadedFile(new File(['x'], 'a.png'), 'galerie/a', 'img')
+    const { publicPath } = await saveUploadedFile(img('a.png'), 'galerie/a', 'img')
     await removePublicFile(publicPath, ['/galerie/'])
     expect(existsSync(path.join(publicDir, publicPath))).toBe(false)
   })
@@ -76,7 +108,7 @@ describe('removePublicFile', () => {
     await removePublicFile('/galerie/../../package.json', ['/galerie/'])
     expect(existsSync(target)).toBe(true)
 
-    const { publicPath } = await saveUploadedFile(new File(['x'], 'a.png'), 'staff', 'img')
+    const { publicPath } = await saveUploadedFile(img('a.png'), 'staff', 'img')
     await removePublicFile(publicPath, ['/galerie/'])
     expect(existsSync(path.join(publicDir, publicPath))).toBe(true)
   })
@@ -90,14 +122,14 @@ describe('removePublicFile', () => {
 
 describe('removePublicDir', () => {
   it('supprime le dossier et son contenu', async () => {
-    await saveUploadedFile(new File(['x'], 'a.png'), 'galerie/album', 'img')
+    await saveUploadedFile(img('a.png'), 'galerie/album', 'img')
     await removePublicDir('galerie/album')
     expect(existsSync(path.join(publicDir, 'galerie', 'album'))).toBe(false)
   })
 
   it('ne sort jamais de public/', async () => {
     const outside = path.join(root, 'outside')
-    await saveUploadedFile(new File(['x'], 'a.png'), 'galerie', 'img')
+    await saveUploadedFile(img('a.png'), 'galerie', 'img')
     writeFileSync(path.join(root, 'keep.txt'), 'k')
     await removePublicDir('../')
     await removePublicDir('')
