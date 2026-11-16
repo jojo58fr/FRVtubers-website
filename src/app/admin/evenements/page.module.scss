@@ -1,0 +1,272 @@
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: clamp(32px, 4vw, 48px) clamp(20px, 5vw, 40px) clamp(80px, 6vw, 120px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 4vw, 40px);
+  color: var(--text-primary);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 2.8rem);
+}
+
+.subtitle {
+  margin-top: 8px;
+  margin-bottom: 0;
+  max-width: 640px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.success,
+.error {
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.success {
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  color: #86efac;
+}
+
+.error {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #fecaca;
+}
+
+.panel {
+  background: rgba(25, 21, 48, 0.7);
+  border: 1px solid rgba(142, 122, 255, 0.25);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.panelTitle {
+  margin: 0 0 16px;
+  font-size: 1.3rem;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emptyState {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 24px;
+}
+
+.item {
+  background: rgba(25, 21, 48, 0.7);
+  border: 1px solid rgba(142, 122, 255, 0.25);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.item summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  cursor: pointer;
+}
+
+.itemTitle {
+  font-weight: 600;
+  flex: 1;
+  min-width: 180px;
+}
+
+.itemMeta {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.badgePublished,
+.badgeDraft {
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.badgePublished {
+  background: rgba(52, 211, 153, 0.12);
+  color: #6ee7b7;
+}
+
+.badgeDraft {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+}
+
+.itemBody {
+  padding: 4px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.formRow label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.formRow input,
+.formRow textarea,
+.formRow select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(142, 122, 255, 0.35);
+  background: rgba(8, 6, 21, 0.6);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  padding: 10px 14px;
+}
+
+.formRow input:focus-visible,
+.formRow textarea:focus-visible,
+.formRow select:focus-visible {
+  outline: none;
+  border-color: rgba(198, 176, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(198, 176, 255, 0.4);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.formRowCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(16, 13, 36, 0.7);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(142, 122, 255, 0.25);
+}
+
+.formRowCheckbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.helperText {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  word-break: break-all;
+}
+
+.blocksFieldset {
+  border: 1px solid rgba(142, 122, 255, 0.25);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 0;
+  min-width: 0;
+}
+
+.blocksFieldset legend {
+  padding: 0 8px;
+  font-weight: 600;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primaryButton {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 92, 246, 0.55);
+  background: rgba(139, 92, 246, 0.25);
+  color: var(--accent-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.primaryButton:hover,
+.primaryButton:focus-visible {
+  border-color: rgba(198, 176, 255, 0.85);
+  background: rgba(139, 92, 246, 0.35);
+}
+
+.danger {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.18);
+  color: #fecaca;
+}
+
+.danger:hover,
+.danger:focus-visible {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(248, 113, 113, 0.26);
+}
+
+.deleteForm {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(142, 122, 255, 0.2);
+  padding-top: 16px;
+}
+
+.deleteForm label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
