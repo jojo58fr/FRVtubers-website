@@ -46,3 +46,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploads (admin)
+/public/galerie/
+/public/evenements/
+/public/staff/
