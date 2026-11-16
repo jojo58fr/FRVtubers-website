@@ -28,6 +28,8 @@ model User {
   accounts Account[]
   sessions Session[]
   magazines Magazine[] @relation("MagazinesCreated")
+  staffMember StaffMember?
+  eventsCreated Event[] @relation("EventsCreated")
 }
 
 enum AdminRole {
@@ -138,4 +140,80 @@ model ResourceTag {
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
   resources ResourceSubmission[]
+}
+
+enum EventType {
+  GENESIS
+  FRVMON
+  OTHER
+}
+
+model Event {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  title         String
+  type          EventType
+  startsAt      DateTime
+  endsAt        DateTime?
+  summary       String?
+  coverImagePath String?
+  published     Boolean   @default(false)
+  hasArticle    Boolean   @default(true)
+  blocks        Json      @default("[]")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdById   String?
+
+  createdBy     User?     @relation("EventsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  photos        Photo[]
+  contributions StaffContribution[]
+
+  @@index([published, startsAt])
+}
+
+model Photo {
+  id           String   @id @default(cuid())
+  eventId      String
+  path         String
+  caption      String?
+  photographer String?
+  width        Int?
+  height       Int?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, sortOrder])
+}
+
+model StaffMember {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  title     String
+  photoPath String?
+  bio       String?
+  links     Json     @default("[]")
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  published Boolean  @default(false)
+  userId    String?  @unique
+
+  user          User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  contributions StaffContribution[]
+}
+
+model StaffContribution {
+  id        String  @id @default(cuid())
+  memberId  String
+  text      String
+  year      Int?
+  eventId   String?
+  sortOrder Int     @default(0)
+
+  member StaffMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  event  Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@index([memberId, sortOrder])
 }
