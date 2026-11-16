@@ -62,4 +62,28 @@ describe('listPublishedStaff', () => {
     expect(json).not.toContain('draft-event')
     expect(json).not.toContain(draft.id)
   })
+  it('exposes eventSlug only when the event page exists (published and hasArticle)', async () => {
+    const noArticle = await prisma.event.create({
+      data: { slug: 'no-article', title: 'n', type: 'OTHER', startsAt: new Date(), published: true, hasArticle: false },
+    })
+    const withArticle = await mkEvent('with-article', true)
+    const draft = await mkEvent('draft-one', false)
+    await prisma.staffMember.create({
+      data: {
+        slug: 'y',
+        name: 'y',
+        title: 't',
+        published: true,
+        contributions: {
+          create: [
+            { text: 'a', sortOrder: 1, eventId: noArticle.id },
+            { text: 'b', sortOrder: 2, eventId: withArticle.id },
+            { text: 'c', sortOrder: 3, eventId: draft.id },
+          ],
+        },
+      },
+    })
+    const [member] = await listPublishedStaff()
+    expect(member.contributions.map((c) => c.eventSlug)).toEqual([null, 'with-article', null])
+  })
 })

@@ -7,7 +7,7 @@ export async function listPublishedStaff() {
     include: {
       contributions: {
         orderBy: { sortOrder: 'asc' },
-        include: { event: { select: { slug: true, published: true } } },
+        include: { event: { select: { slug: true, published: true, hasArticle: true } } },
       },
     },
   })
@@ -18,8 +18,8 @@ export async function listPublishedStaff() {
       text: c.text,
       year: c.year,
       sortOrder: c.sortOrder,
-      // Only link to events that are publicly visible.
-      eventSlug: c.event?.published ? c.event.slug : null,
+      // Only link to events whose public page exists (published AND with an article).
+      eventSlug: c.event?.published && c.event.hasArticle ? c.event.slug : null,
     })),
   }))
 }
