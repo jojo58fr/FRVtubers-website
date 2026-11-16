@@ -149,7 +149,7 @@ const parseRefusals = (values: string[]): RefusedFile[] =>
   values.slice(0, MAX_REFUSALS_IN_URL).flatMap((value) => {
     const separator = value.indexOf(':')
     const reason = value.slice(0, separator)
-    if (separator === -1 || !(reason in REFUSAL_MESSAGES)) return []
+    if (separator === -1 || !Object.hasOwn(REFUSAL_MESSAGES, reason)) return []
     return [{ reason: reason as RefusalReason, name: value.slice(separator + 1, separator + 1 + MAX_NAME_LENGTH) }]
   })
 
@@ -185,9 +185,9 @@ export default async function AdminEventPhotosPage({
   if (statusCode === 'uploaded') {
     statusMessage = `${savedCount} photo${savedCount > 1 ? 's' : ''} ajoutée${savedCount > 1 ? 's' : ''}.`
   } else if (statusCode) {
-    statusMessage = STATUS_MESSAGES[statusCode] ?? null
+    statusMessage = Object.hasOwn(STATUS_MESSAGES, statusCode) ? STATUS_MESSAGES[statusCode] : null
   }
-  const errorMessage = errorCode ? ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] ?? null : null
+  const errorMessage = errorCode && Object.hasOwn(ERROR_MESSAGES, errorCode) ? ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] : null
 
   const photos = await prisma.photo.findMany({
     where: { eventId: event.id },

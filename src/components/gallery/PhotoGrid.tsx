@@ -97,14 +97,14 @@ const PhotoGrid = ({ photos, altPrefix = 'Photo' }: PhotoGridProps) => {
             </button>
             <div className={styles.stage}>
               {count > 1 ? (
-                <button type="button" className={`${styles.nav} ${styles.prev}`} onClick={() => move(-1)} aria-label="Photo précédente">
+                <button type="button" className={styles.nav} onClick={() => move(-1)} aria-label="Photo précédente">
                   ‹
                 </button>
               ) : null}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo.path} alt={altFor(photo)} className={styles.full} />
               {count > 1 ? (
-                <button type="button" className={`${styles.nav} ${styles.next}`} onClick={() => move(1)} aria-label="Photo suivante">
+                <button type="button" className={styles.nav} onClick={() => move(1)} aria-label="Photo suivante">
                   ›
                 </button>
               ) : null}
