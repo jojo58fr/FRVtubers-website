@@ -7,7 +7,7 @@ const { createRequire } = require('node:module');
 const ts = require('typescript');
 const root = path.resolve(__dirname, '..');
 
-function loadSource({ mocks = {}, env = {}, fetch, expose = {}, console: output } = {}) {
+function loadSource({ mocks = {}, env = {}, fetch, expose = {}, console: output, globals = {} } = {}) {
   const cache = new Map();
   const context = vm.createContext({
     Buffer, URL, URLSearchParams, Request, Response, Headers, AbortSignal, TextDecoder,
@@ -19,6 +19,7 @@ function loadSource({ mocks = {}, env = {}, fetch, expose = {}, console: output 
     }, cwd: () => root },
     console: output ?? { info() {}, warn() {}, error() {}, log() {} },
     fetch: fetch ?? (() => { throw new Error('Unexpected network access in test'); }),
+    ...globals,
   });
   function load(filename) {
     filename = path.resolve(root, filename);

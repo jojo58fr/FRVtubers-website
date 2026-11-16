@@ -12,6 +12,10 @@ const corsHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Git ignores do not prevent filesystem tracing from bundling private reports.
+  outputFileTracingExcludes: {
+    '/*': ['./docs/**/*'],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '500mb',
@@ -35,6 +39,11 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        source: '/:path*',
+        // Avoid speculative DNS lookups of third-party policy/outgoing links.
+        headers: [{ key: 'X-DNS-Prefetch-Control', value: 'off' }],
+      },
       {
         source: '/api/auth/:path*',
         headers: corsHeaders,

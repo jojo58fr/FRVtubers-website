@@ -147,4 +147,44 @@ Ces vérifications ne remplacent pas un essai OAuth Discord réel avec compte de
 
 Les routes `/confidentialite` et `/mentions-legales` sont des documents de travail en français, accessibles depuis le pied de page. Les formulaires de contact et de candidature affichent une information sur les données ; la connexion passe par `/login` pour présenter l’information avant l’autorisation Discord. Aucune case d’acceptation globale du RGPD n’est ajoutée.
 
+Les notices renvoient à la rubrique concernée et à l’exercice des droits. Les pages disposent d’un sommaire et d’un lien d’évitement clavier. `tests/legal-pages.test.cjs` contrôle leur structure, leurs liens et les contrastes des couleurs par défaut ; `npm run test:http` vérifie également leur rendu HTTP public. Ces contrôles ne remplacent pas une vérification visuelle sur mobile et au clavier.
+
+`docs/` est aussi exclu du traçage des fichiers de déploiement Next.js ; le test HTTP vérifie cette exclusion dans les manifestes produits par le build. Un paquet d’hébergement ou une archive préparés manuellement doivent appliquer leur propre exclusion : `.gitignore` ne les protège pas.
+
+Le lecteur Twitch reste désactivé avant un choix explicite. Les choix sont centralisés par **vanilla-cookieconsent 3.3.0**, installé via npm et servi avec les fichiers du site, sans script CDN ni compte de service externe. L’accord et le refus sont conservés 180 jours dans le stockage local de l’origine courante, sans renouvellement à chaque visite. Le bouton **Gérer mes cookies** du footer ouvre le panneau de la bibliothèque ; `/parametres-confidentialite` propose également le retrait. Seul le bouton d’activation apparaît sous la prévisualisation ; il est masqué une fois Twitch autorisé. Le formulaire Open Collective reste un lien externe. Les appels serveur Discord, les cookies de connexion et les préférences thème/langue restent distincts de ce choix.
+
+### Maintenir le gestionnaire de consentement
+
+Documentation officielle : [intégration React](https://cookieconsent.orestbida.com/essential/getting-started.html#react), [configuration](https://cookieconsent.orestbida.com/reference/configuration-reference.html), [API](https://cookieconsent.orestbida.com/reference/api-reference.html).
+
+| Fichier | Responsabilité |
+| --- | --- |
+| `src/lib/cookie-consent-config.ts` | Catégories/services, durée, révision et textes français/anglais |
+| `src/components/privacy/CookieConsentManager.tsx` | Initialisation côté client unique depuis le layout ; suit la langue du document |
+| `src/lib/twitch-consent.ts` | Pont entre la bibliothèque et React ; expiration, synchronisation et refus sûr en cas d’échec |
+| `src/components/privacy/useTwitchConsent.ts` | Abonnement React au choix, actions et événements navigateur |
+| `src/components/privacy/TwitchPlayer.tsx` | Monte l’iframe uniquement quand `choice === 'granted'` et la démonte au retrait |
+| `src/app/cookie-consent.scss` | Variables de thème, focus et boutons du panneau ; CSS de la bibliothèque importé dans le layout |
+| `tests/third-party-tracking.test.cjs` | Bibliothèque réelle dans un DOM jsdom isolé, choix, panneau, langues, expiration, retrait, migration et pannes |
+
+Configuration volontaire : mode `opt-in`, catégorie `necessary` non désactivable, catégorie `media` facultative avec le seul service `twitch`. `autoShow: false` conserve une demande contextuelle sur le lecteur au lieu d’une fenêtre sur toutes les pages. Le gestionnaire reste accessible depuis le footer. Les traductions de ce panneau sont définies dans la configuration ; cela ne traduit pas les pages éditoriales du site.
+
+`manageScriptTags: false` : la bibliothèque ne détecte ni ne bloque magiquement les iframes, images ou appels réseau. **Le blocage effectif reste dans le composant React avant tout chargement.** `autoClearCookies: false` évite une suppression générique des cookies ; retirer l’accord ne supprime pas les cookies d’une autre origine, notamment Twitch. Ne pas ajouter de règles d’effacement qui toucheraient aux cookies NextAuth.
+
+Stockage unique : `localStorage.frvtubers_consent`, avec catégories/services, révision, horodatages, expiration, langue et `consentId` aléatoire généré par la bibliothèque. Aucun journal ni envoi serveur de cet identifiant n’est ajouté. Il ne constitue pas une preuve centralisée de consentement. Le choix reste limité au navigateur et à l’origine, sans partage avec les sous-domaines. Le pont revalide le stockage entre onglets, au focus/retour de page et à l’expiration ; si l’écriture est bloquée, un choix explicite peut fonctionner en mémoire sur la page courante.
+
+Migration : l’ancienne clé `frvtubers:twitch-consent` est ignorée puis retirée si le stockage est disponible. **Les anciens accords ne sont pas importés** : un nouveau choix sera demandé à l’activation du lecteur. Aucun compte, avatar, message ou cookie de connexion n’est supprimé.
+
+Pour ajouter un service :
+
+1. Inventorier ses requêtes et finalités, identifier le responsable et examiner ses traceurs ; une URL externe ne suffit pas à justifier une catégorie soumise au consentement.
+2. Ajouter le service dans une catégorie facultative de `cookie-consent-config.ts`, désactivée par défaut, et renseigner les textes/liens en français et anglais. Ne jamais classer un service de publicité ou de mesure comme nécessaire pour contourner le choix.
+3. Relier le composant concerné à `acceptedService(service, category)` via un abonnement React, comme le pont Twitch. Tant que le choix n’est pas valide, ne monter aucune ressource du service et ne pas ajouter de préconnexion/préchargement. Prévoir aussi le démontage au retrait.
+4. Incrémenter `CONSENT_REVISION` lors d’un changement substantiel des finalités/services/destinataires ou de l’information nécessitant un nouvel accord. `CONSENT_DAYS` définit la durée commune (180 jours actuellement). Ne pas renouveler le stockage à chaque visite.
+5. Mettre à jour `/confidentialite`, les tests et le rapport privé `docs/rgpd/third-party-tracking.md`, puis contrôler le réseau dans un vrai navigateur avant publication.
+
+Après une modification : `npm test`, `npm run typecheck`, lint ciblé, build avec une base synthétique, puis `npm run test:http`. `jsdom` est une dépendance de développement pour exécuter la bibliothèque réelle dans les tests (Node 22.13+ recommandé pour l’ensemble des tests, dont HTTP) ; il ne fournit ni rendu visuel ni audit réseau navigateur. Tester manuellement l’ouverture/fermeture du panneau, le clavier et le focus, le mobile, le choix mémorisé, sa révocation dans un autre onglet et l’absence de trafic Twitch avant accord. Une bibliothèque ne garantit pas à elle seule la conformité RGPD.
+
+`tests/third-party-tracking.test.cjs` couvre le blocage initial, l’activation, la conservation, l’expiration, les pannes de stockage et le retrait. Le test HTTP contrôle aussi le HTML et les indications de préchargement initiaux. Ces contrôles ne constituent pas une observation du réseau dans un navigateur ; la procédure manuelle est dans `docs/rgpd/third-party-tracking.md` (document privé ignoré).
+
 **Ne pas publier ces textes en l’état.** Compléter les marqueurs `[À COMPLÉTER]`, confirmer les bases légales et vérifier l’identité de l’éditeur, du responsable et de l’hébergeur, les destinataires, durées et garanties des prestataires avant publication. Le bandeau de brouillon et `noindex` signalent ce statut ; ils ne constituent ni un contrôle d’accès ni un mécanisme bloquant de déploiement. Les rapports et la liste des informations à valider sont conservés localement dans `docs/rgpd/`, actuellement ignoré par Git : prévoir leur sauvegarde dans un espace privé séparé. Les pages ne règlent pas à elles seules les traceurs, la conservation ou l’exercice des droits.

@@ -33,7 +33,8 @@
     "react-pageflip": "^2.0.3",
     "react-pdf": "^10.2.0",
     "sass": "^1.93.3",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4.0.0",
+    "vanilla-cookieconsent": "3.3.0"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -41,6 +42,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "jsdom": "29.0.0",
     "typescript": "^5"
   },
   "prisma": {

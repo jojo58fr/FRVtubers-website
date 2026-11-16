@@ -12,6 +12,18 @@ const { encode } = require('next-auth/jwt');
 const root = path.resolve(__dirname, '..');
 
 async function main() {
+  // Exercise the generated deployment manifests, not just the config spelling.
+  const buildDir = path.join(root, '.next');
+  const traces = fs.readdirSync(buildDir, { recursive: true }).filter(file => file.endsWith('.nft.json'));
+  assert.ok(traces.length > 0, 'Build file traces exist');
+  for (const trace of traces) {
+    const filename = path.join(buildDir, trace);
+    const files = JSON.parse(fs.readFileSync(filename, 'utf8')).files;
+    for (const file of files) {
+      const resolved = path.relative(root, path.resolve(path.dirname(filename), file)).replaceAll('\\', '/');
+      assert.ok(!resolved.startsWith('docs/'), 'Private reports are absent from deployment traces');
+    }
+  }
   const dbName = `security-smoke-${randomUUID()}.db`;
   const db = new DatabaseSync(path.join(root, 'prisma', dbName));
   for (const dir of fs.readdirSync(path.join(root, 'prisma/migrations')).sort()) {
@@ -59,7 +71,27 @@ async function main() {
     // Benign local image: assert the vulnerable optimizer route is closed,
     // without sending crafted content or causing an external image fetch.
     assert.equal((await fetch(origin + '/_next/image?url=%2Ficon.png&w=64&q=75')).status, 404);
-    const home = await (await fetch(origin + '/')).text();
+    const homeResponse = await fetch(origin + '/');
+    assert.equal(homeResponse.headers.get('x-dns-prefetch-control'), 'off');
+    const home = await homeResponse.text();
+    assert.match(home, /Autoriser Twitch et afficher le lecteur/);
+    assert.match(home, /Gérer mes cookies/);
+    assert.doesNotMatch(home, /<(?:iframe|img|script)[^>]+(?:src|srcset)=["'][^"']*(?:twitch\.tv|ttvnw\.net|jtvnw\.net)/i);
+    assert.doesNotMatch(homeResponse.headers.get('link') ?? '', /(?:twitch\.tv|ttvnw\.net|jtvnw\.net)/i);
+    for (const [, attributes] of home.matchAll(/<link\b([^>]+)>/gi)) {
+      if (/rel=["'](?:preconnect|dns-prefetch|preload|prefetch)["']/i.test(attributes)) {
+        assert.doesNotMatch(attributes, /(?:twitch\.tv|ttvnw\.net|jtvnw\.net)/i);
+      }
+    }
+    for (const route of ['/dons', '/parametres-confidentialite']) {
+      const response = await fetch(origin + route);
+      assert.equal(response.status, 200);
+      const html = await response.text();
+      assert.doesNotMatch(html, /<iframe\b/);
+      assert.match(html, /href="\/parametres-confidentialite"/);
+      if (route === '/dons') assert.match(html, /href="https:\/\/opencollective.com\/frvtubers"/);
+      else assert.match(html, /Retirer|Refuser Twitch/);
+    }
     assert.doesNotMatch(home, /<img[^>]+src=["']\/_next\/image/);
     const localImage = home.match(/src=["'](\/_next\/static\/media\/[^"']+)["']/);
     assert.ok(localImage, 'Original local logo remains in the HTML');
@@ -74,6 +106,17 @@ async function main() {
       assert.match(html, /name="robots" content="noindex, nofollow"/);
       assert.match(html, /href="\/confidentialite"/);
       assert.match(html, /href="\/mentions-legales"/);
+      assert.match(html, /href="#legal-content"/);
+      assert.match(html, /<main[^>]+id="legal-content"[^>]+tabindex="-1"[^>]+aria-labelledby="legal-title"/i);
+      const ids = new Set(Array.from(html.matchAll(/\bid="([^"]+)"/g), match => match[1]));
+      for (const [, target] of html.matchAll(/href="#([^"]+)"/g)) {
+        assert.ok(ids.has(target), `Rendered legal anchor exists: ${target}`);
+      }
+      if (route === '/confidentialite') {
+        for (const target of ['contact', 'candidatures', 'connexion-discord', 'droits']) {
+          assert.ok(ids.has(target), `Notice destination exists: ${target}`);
+        }
+      }
       assert.doesNotMatch(html, /<iframe\b|src="https:\/\/(?:player\.twitch\.tv|opencollective\.com)/);
     }
     for (const route of ['/contact', '/login']) {
@@ -132,6 +175,7 @@ async function main() {
     console.log('HTTP smoke: Discord-only providers; real cookie/SQLite access matrix and deleted-account rejection passed.');
     console.log('Consolidation: optimizer disabled; legacy/chunked JWT, preferences, malformed/expired cookies and staff downgrade passed.');
     console.log('Legal pages: public routes, draft status, noindex, privacy notices, footer and authenticated onboarding passed.');
+    console.log('Third parties: initial HTTP markup has no Twitch iframe/resource hint; donation link and privacy settings passed. Network requests were not observed in a browser.');
   } finally {
     server.kill();
     await Promise.race([exited, delay(5000)]);

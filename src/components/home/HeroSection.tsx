@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faVideo } from '@fortawesome/free-solid-svg-icons'
 import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 import styles from './HeroSection.module.scss'
+import TwitchPlayer from '@/components/privacy/TwitchPlayer'
 
 type StatItem = {
   value: string
@@ -112,15 +113,7 @@ const HeroSection = ({ stats, streamUrl, twitchEmbedUrl }: HeroSectionProps) => 
           <span className={styles.showcaseChip}>La chaîne FRVtubers</span>
           <FontAwesomeIcon icon={faVideo} className={styles.showcaseIcon} />
         </div>
-        <div className={styles.showcaseEmbed}>
-          <iframe
-            src={twitchEmbedUrl}
-            title="FRVtubers Live de la semaine"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
-            allowFullScreen
-            loading="lazy"
-          />
-        </div>
+        <TwitchPlayer embedUrl={twitchEmbedUrl} />
         {/* <div className={styles.showcaseBody}>
           <div>
             <p className={styles.showcaseTitle}>Focus : atelier avatars 2D</p>
