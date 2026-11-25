@@ -1,11 +1,14 @@
+@use "../admin-tokens" as *;
+
 .page {
+  @include admin-tokens;
   max-width: 1000px;
   margin: 0 auto;
   padding: clamp(32px, 4vw, 48px) clamp(20px, 5vw, 40px) clamp(80px, 6vw, 120px);
   display: flex;
   flex-direction: column;
   gap: clamp(24px, 4vw, 40px);
-  color: var(--text-primary);
+  color: var(--adm-text);
 }
 
 .header {
@@ -24,7 +27,7 @@
   margin-top: 8px;
   margin-bottom: 0;
   max-width: 640px;
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   line-height: 1.5;
 }
 
@@ -44,20 +47,20 @@
 }
 
 .success {
-  background: rgba(74, 222, 128, 0.15);
-  border: 1px solid rgba(74, 222, 128, 0.4);
-  color: #86efac;
+  background: var(--adm-success-bg);
+  border: 1px solid var(--adm-success-border);
+  color: var(--adm-success-text);
 }
 
 .error {
-  background: rgba(248, 113, 113, 0.15);
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  color: #fecaca;
+  background: var(--adm-danger-bg);
+  border: 1px solid var(--adm-danger-border);
+  color: var(--adm-danger-text);
 }
 
 .panel {
-  background: rgba(25, 21, 48, 0.7);
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
   border-radius: 18px;
   padding: 20px;
 }
@@ -77,14 +80,14 @@
 }
 
 .emptyState {
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   text-align: center;
   padding: 24px;
 }
 
 .item {
-  background: rgba(25, 21, 48, 0.7);
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
   border-radius: 18px;
   overflow: hidden;
 }
@@ -105,7 +108,7 @@
 }
 
 .itemMeta {
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   font-size: 0.85rem;
 }
 
@@ -118,13 +121,13 @@
 }
 
 .badgePublished {
-  background: rgba(52, 211, 153, 0.12);
-  color: #6ee7b7;
+  background: var(--adm-success-bg);
+  color: var(--adm-success-text);
 }
 
 .badgeDraft {
-  background: rgba(248, 113, 113, 0.12);
-  color: #fca5a5;
+  background: var(--adm-danger-bg);
+  color: var(--adm-danger-text);
 }
 
 .itemBody {
@@ -157,9 +160,9 @@
 .formRow select {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(142, 122, 255, 0.35);
-  background: rgba(8, 6, 21, 0.6);
-  color: var(--text-primary);
+  border: 1px solid var(--adm-border-input);
+  background: var(--adm-input-bg);
+  color: var(--adm-text);
   font-size: 0.95rem;
   padding: 10px 14px;
 }
@@ -168,8 +171,8 @@
 .formRow textarea:focus-visible,
 .formRow select:focus-visible {
   outline: none;
-  border-color: rgba(198, 176, 255, 0.9);
-  box-shadow: 0 0 0 1px rgba(198, 176, 255, 0.4);
+  border-color: var(--adm-focus);
+  box-shadow: 0 0 0 1px var(--adm-focus);
 }
 
 .formGrid {
@@ -188,10 +191,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(16, 13, 36, 0.7);
+  background: var(--adm-surface-alt);
   border-radius: 12px;
   padding: 12px;
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  border: 1px solid var(--adm-border);
 }
 
 .formRowCheckbox input {
@@ -202,12 +205,12 @@
 .helperText {
   margin: 4px 0 0;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--adm-text-muted);
   word-break: break-all;
 }
 
 .blocksFieldset {
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  border: 1px solid var(--adm-border);
   border-radius: 14px;
   padding: 16px;
   margin: 0;
@@ -229,9 +232,9 @@
 .primaryButton {
   padding: 10px 20px;
   border-radius: 999px;
-  border: 1px solid rgba(139, 92, 246, 0.55);
-  background: rgba(139, 92, 246, 0.25);
-  color: var(--accent-primary);
+  border: 1px solid var(--adm-accent-border);
+  background: var(--adm-accent-bg);
+  color: var(--adm-accent);
   font-weight: 600;
   cursor: pointer;
   transition: border-color 150ms ease, background 150ms ease;
@@ -239,20 +242,20 @@
 
 .primaryButton:hover,
 .primaryButton:focus-visible {
-  border-color: rgba(198, 176, 255, 0.85);
-  background: rgba(139, 92, 246, 0.35);
+  border-color: var(--adm-focus);
+  background: var(--adm-accent-bg-hover);
 }
 
 .danger {
-  border-color: rgba(248, 113, 113, 0.45);
-  background: rgba(248, 113, 113, 0.18);
-  color: #fecaca;
+  border-color: var(--adm-danger-border);
+  background: var(--adm-danger-bg);
+  color: var(--adm-danger-text);
 }
 
 .danger:hover,
 .danger:focus-visible {
-  border-color: rgba(248, 113, 113, 0.7);
-  background: rgba(248, 113, 113, 0.26);
+  border-color: var(--adm-danger-border);
+  background: var(--adm-danger-bg-hover);
 }
 
 .deleteForm {
@@ -260,7 +263,7 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  border-top: 1px solid rgba(142, 122, 255, 0.2);
+  border-top: 1px solid var(--adm-border);
   padding-top: 16px;
 }
 
@@ -287,9 +290,9 @@
 .linkRow input {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(142, 122, 255, 0.35);
-  background: rgba(8, 6, 21, 0.6);
-  color: var(--text-primary);
+  border: 1px solid var(--adm-border-input);
+  background: var(--adm-input-bg);
+  color: var(--adm-text);
   font-size: 0.95rem;
   padding: 10px 14px;
 }
@@ -297,9 +300,9 @@
 .secondaryButton {
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(142, 122, 255, 0.35);
+  border: 1px solid var(--adm-border-input);
   background: transparent;
-  color: var(--text-primary);
+  color: var(--adm-text);
   cursor: pointer;
 }
 
@@ -313,9 +316,9 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(142, 122, 255, 0.35);
+  border: 1px solid var(--adm-border-input);
   background: transparent;
-  color: var(--text-primary);
+  color: var(--adm-text);
   cursor: pointer;
 }
 
@@ -341,7 +344,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 1px solid rgba(142, 122, 255, 0.2);
+  border: 1px solid var(--adm-border);
   border-radius: 14px;
   padding: 12px;
 }
@@ -364,9 +367,9 @@
 .contributionForm select {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(142, 122, 255, 0.35);
-  background: rgba(8, 6, 21, 0.6);
-  color: var(--text-primary);
+  border: 1px solid var(--adm-border-input);
+  background: var(--adm-input-bg);
+  color: var(--adm-text);
   font-size: 0.95rem;
   padding: 10px 14px;
 }

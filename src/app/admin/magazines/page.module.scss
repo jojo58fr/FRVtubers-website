@@ -1,11 +1,14 @@
+@use "../admin-tokens" as *;
+
 .page {
+  @include admin-tokens;
   max-width: 1180px;
   margin: 0 auto;
   padding: clamp(32px, 4vw, 48px) clamp(20px, 5vw, 40px) clamp(80px, 6vw, 120px);
   display: flex;
   flex-direction: column;
   gap: clamp(24px, 4vw, 40px);
-  color: var(--text-primary);
+  color: var(--adm-text);
 }
 
 .header {
@@ -24,7 +27,7 @@
   margin-top: 8px;
   margin-bottom: 0;
   max-width: 640px;
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   line-height: 1.5;
 }
 
@@ -44,15 +47,15 @@
 }
 
 .success {
-  background: rgba(74, 222, 128, 0.15);
-  border: 1px solid rgba(74, 222, 128, 0.4);
-  color: #86efac;
+  background: var(--adm-success-bg);
+  border: 1px solid var(--adm-success-border);
+  color: var(--adm-success-text);
 }
 
 .error {
-  background: rgba(248, 113, 113, 0.15);
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  color: #fecaca;
+  background: var(--adm-danger-bg);
+  border: 1px solid var(--adm-danger-border);
+  color: var(--adm-danger-text);
 }
 
 .manager {
@@ -73,9 +76,9 @@
   gap: 10px;
   padding: 10px 20px;
   border-radius: 999px;
-  border: 1px solid rgba(142, 122, 255, 0.4);
-  background: rgba(139, 92, 246, 0.15);
-  color: var(--accent-primary);
+  border: 1px solid var(--adm-border-input);
+  background: var(--adm-accent-bg);
+  color: var(--adm-accent);
   font-weight: 600;
   cursor: pointer;
   transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, opacity 150ms ease;
@@ -84,8 +87,8 @@
 .toolbarButton:hover,
 .toolbarButton:focus-visible {
   transform: translateY(-1px);
-  border-color: rgba(198, 176, 255, 0.85);
-  background: rgba(139, 92, 246, 0.25);
+  border-color: var(--adm-focus);
+  background: var(--adm-accent-bg);
 }
 
 .toolbarButton:disabled {
@@ -95,15 +98,15 @@
 }
 
 .danger {
-  border-color: rgba(248, 113, 113, 0.45);
-  background: rgba(248, 113, 113, 0.18);
-  color: #fecaca;
+  border-color: var(--adm-danger-border);
+  background: var(--adm-danger-bg);
+  color: var(--adm-danger-text);
 }
 
 .danger:hover,
 .danger:focus-visible {
-  border-color: rgba(248, 113, 113, 0.7);
-  background: rgba(248, 113, 113, 0.26);
+  border-color: var(--adm-danger-border);
+  background: var(--adm-danger-bg-hover);
 }
 
 .managerLayout {
@@ -114,8 +117,8 @@
 }
 
 .listPane {
-  background: rgba(25, 21, 48, 0.7);
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
   border-radius: 18px;
   overflow: hidden;
   display: flex;
@@ -129,9 +132,9 @@
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: rgba(16, 13, 36, 0.9);
-  border-bottom: 1px solid rgba(142, 122, 255, 0.25);
-  color: var(--text-secondary);
+  background: var(--adm-surface-alt);
+  border-bottom: 1px solid var(--adm-border);
+  color: var(--adm-text-muted);
 }
 
 .list {
@@ -144,7 +147,7 @@
 
 .emptyState {
   padding: 24px;
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   text-align: center;
 }
 
@@ -160,22 +163,22 @@
 }
 
 .listItem:nth-child(even) {
-  background: rgba(16, 13, 36, 0.5);
+  background: var(--adm-surface-alt);
 }
 
 .listItem:hover,
 .listItem:focus-visible {
-  background: rgba(139, 92, 246, 0.15);
+  background: var(--adm-accent-bg);
 }
 
 .listItemSelected {
-  background: rgba(139, 92, 246, 0.2);
-  border-left-color: rgba(139, 92, 246, 0.6);
+  background: var(--adm-accent-bg);
+  border-left-color: var(--adm-accent-border);
 }
 
 .primaryCell {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--adm-text);
 }
 
 .badgePublished,
@@ -188,18 +191,18 @@
 }
 
 .badgePublished {
-  background: rgba(52, 211, 153, 0.12);
-  color: #6ee7b7;
+  background: var(--adm-success-bg);
+  color: var(--adm-success-text);
 }
 
 .badgeDraft {
-  background: rgba(248, 113, 113, 0.12);
-  color: #fca5a5;
+  background: var(--adm-danger-bg);
+  color: var(--adm-danger-text);
 }
 
 .previewPane {
-  background: rgba(25, 21, 48, 0.65);
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
   border-radius: 18px;
   padding: 20px;
   display: flex;
@@ -209,7 +212,7 @@
 
 .previewCover {
   aspect-ratio: 3 / 4;
-  background: rgba(16, 13, 36, 0.8);
+  background: var(--adm-surface-alt);
   border-radius: 14px;
   overflow: hidden;
   display: flex;
@@ -233,7 +236,7 @@
   gap: 6px;
   margin: 0 0 16px;
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
 }
 
 .previewDescription {
@@ -243,7 +246,7 @@
 
 .previewDescriptionMuted {
   margin: 0 0 16px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--adm-text-muted);
   font-style: italic;
 }
 
@@ -254,7 +257,7 @@
 }
 
 .previewLinks a {
-  color: var(--accent-primary);
+  color: var(--adm-accent);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -263,17 +266,17 @@
   flex: 1;
   display: grid;
   place-items: center;
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   text-align: center;
   padding: 40px 24px;
-  border: 1px dashed rgba(142, 122, 255, 0.3);
+  border: 1px dashed var(--adm-border);
   border-radius: 12px;
 }
 
 .modalBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(8, 6, 21, 0.75);
+  background: var(--adm-surface-alt);
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
@@ -283,10 +286,10 @@
 
 .modal {
   width: min(560px, 100%);
-  background: rgba(20, 16, 44, 0.95);
-  border: 1px solid rgba(142, 122, 255, 0.35);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border-input);
   border-radius: 20px;
-  box-shadow: 0 25px 60px rgba(12, 9, 30, 0.55);
+  box-shadow: 0 25px 60px var(--adm-surface-alt);
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 48px);
@@ -313,15 +316,15 @@
   height: 36px;
   border-radius: 999px;
   border: none;
-  background: rgba(139, 92, 246, 0.25);
-  color: var(--accent-primary);
+  background: var(--adm-accent-bg);
+  color: var(--adm-accent);
   font-size: 1.4rem;
   cursor: pointer;
 }
 
 .iconButton:hover,
 .iconButton:focus-visible {
-  background: rgba(139, 92, 246, 0.4);
+  background: var(--adm-accent-border);
 }
 
 .modalContent {
@@ -338,9 +341,9 @@
 .formError {
   border-radius: 12px;
   padding: 12px 16px;
-  background: rgba(248, 113, 113, 0.18);
-  border: 1px solid rgba(248, 113, 113, 0.35);
-  color: #fecaca;
+  background: var(--adm-danger-bg);
+  border: 1px solid var(--adm-danger-border);
+  color: var(--adm-danger-text);
   font-size: 0.92rem;
   line-height: 1.5;
 }
@@ -360,9 +363,9 @@
 .formRow textarea {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(142, 122, 255, 0.35);
-  background: rgba(8, 6, 21, 0.6);
-  color: var(--text-primary);
+  border: 1px solid var(--adm-border-input);
+  background: var(--adm-input-bg);
+  color: var(--adm-text);
   font-size: 0.95rem;
   padding: 10px 14px;
   transition: border-color 200ms ease, box-shadow 200ms ease;
@@ -371,8 +374,8 @@
 .formRow input:focus-visible,
 .formRow textarea:focus-visible {
   outline: none;
-  border-color: rgba(198, 176, 255, 0.9);
-  box-shadow: 0 0 0 1px rgba(198, 176, 255, 0.4);
+  border-color: var(--adm-focus);
+  box-shadow: 0 0 0 1px var(--adm-focus);
 }
 
 .formGrid {
@@ -385,10 +388,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(16, 13, 36, 0.7);
+  background: var(--adm-surface-alt);
   border-radius: 12px;
   padding: 12px;
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  border: 1px solid var(--adm-border);
 }
 
 .formRowCheckbox input {
@@ -399,7 +402,7 @@
 .helperText {
   margin: 6px 0 0;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--adm-text-muted);
 }
 
 .formActions {
@@ -424,29 +427,29 @@
 }
 
 .primaryButton {
-  background: rgba(139, 92, 246, 0.25);
-  border-color: rgba(139, 92, 246, 0.55);
-  color: var(--accent-primary);
+  background: var(--adm-accent-bg);
+  border-color: var(--adm-accent-border);
+  color: var(--adm-accent);
 }
 
 .primaryButton:hover,
 .primaryButton:focus-visible {
   transform: translateY(-1px);
-  border-color: rgba(198, 176, 255, 0.85);
-  background: rgba(139, 92, 246, 0.35);
+  border-color: var(--adm-focus);
+  background: var(--adm-accent-bg-hover);
 }
 
 .secondaryButton {
   background: transparent;
-  border-color: rgba(142, 122, 255, 0.35);
-  color: var(--text-secondary);
+  border-color: var(--adm-border-input);
+  color: var(--adm-text-muted);
 }
 
 .secondaryButton:hover,
 .secondaryButton:focus-visible {
   transform: translateY(-1px);
-  border-color: rgba(198, 176, 255, 0.65);
-  color: var(--text-primary);
+  border-color: var(--adm-focus);
+  color: var(--adm-text);
 }
 
 @media (max-width: 960px) {

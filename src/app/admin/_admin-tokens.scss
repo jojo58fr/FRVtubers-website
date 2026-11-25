@@ -1,0 +1,65 @@
+// Admin-only design tokens. Included from each admin `.page` root, so the
+// variables are scoped to the admin pages and never leak into the rest of the site.
+// Light values are the default; `.dark` (set on <html> by the theme script) overrides them.
+// Contrast targets: text >= 4.5:1, input borders / focus ring >= 3:1.
+@mixin admin-tokens {
+  --adm-surface: #ffffff;
+  --adm-surface-alt: #f1f5f9;
+  --adm-input-bg: #ffffff;
+  --adm-overlay: rgba(15, 23, 42, 0.55);
+
+  --adm-text: #0f172a;
+  --adm-text-muted: #475569;
+
+  --adm-border: rgba(15, 23, 42, 0.16);
+  --adm-border-input: #64748b;
+
+  --adm-accent: #4338ca;
+  --adm-accent-bg: rgba(79, 70, 229, 0.1);
+  --adm-accent-bg-hover: rgba(79, 70, 229, 0.18);
+  --adm-accent-border: rgba(67, 56, 202, 0.55);
+  --adm-focus: #4338ca;
+
+  --adm-danger-text: #b91c1c;
+  --adm-danger-bg: #fef2f2;
+  --adm-danger-bg-hover: #fee2e2;
+  --adm-danger-border: rgba(185, 28, 28, 0.5);
+
+  --adm-success-text: #15803d;
+  --adm-success-bg: #f0fdf4;
+  --adm-success-border: rgba(21, 128, 61, 0.5);
+
+  --adm-warning-text: #92400e;
+  --adm-warning-bg: #fffbeb;
+
+  :global(.dark) & {
+    --adm-surface: #111827;
+    --adm-surface-alt: #1e293b;
+    --adm-input-bg: #0b1220;
+    --adm-overlay: rgba(2, 6, 23, 0.7);
+
+    --adm-text: #e2e8f0;
+    --adm-text-muted: #cbd5e1;
+
+    --adm-border: rgba(148, 163, 184, 0.3);
+    --adm-border-input: #94a3b8;
+
+    --adm-accent: #c4b5fd;
+    --adm-accent-bg: rgba(139, 92, 246, 0.22);
+    --adm-accent-bg-hover: rgba(139, 92, 246, 0.35);
+    --adm-accent-border: rgba(196, 181, 253, 0.6);
+    --adm-focus: #c4b5fd;
+
+    --adm-danger-text: #fecaca;
+    --adm-danger-bg: rgba(248, 113, 113, 0.16);
+    --adm-danger-bg-hover: rgba(248, 113, 113, 0.26);
+    --adm-danger-border: rgba(248, 113, 113, 0.55);
+
+    --adm-success-text: #86efac;
+    --adm-success-bg: rgba(74, 222, 128, 0.14);
+    --adm-success-border: rgba(74, 222, 128, 0.5);
+
+    --adm-warning-text: #fde68a;
+    --adm-warning-bg: rgba(251, 191, 36, 0.16);
+  }
+}

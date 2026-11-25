@@ -1,11 +1,14 @@
+@use "../../../admin-tokens" as *;
+
 .page {
+  @include admin-tokens;
   max-width: 1100px;
   margin: 0 auto;
   padding: clamp(32px, 4vw, 48px) clamp(20px, 5vw, 40px) clamp(80px, 6vw, 120px);
   display: flex;
   flex-direction: column;
   gap: clamp(24px, 4vw, 40px);
-  color: var(--text-primary);
+  color: var(--adm-text);
 }
 
 .header {
@@ -16,7 +19,7 @@
 }
 
 .back {
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   font-size: 0.9rem;
 }
 
@@ -27,7 +30,7 @@
 
 .subtitle {
   margin: 8px 0 0;
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
 }
 
 .feedback {
@@ -46,23 +49,23 @@
 }
 
 .success {
-  background: rgba(74, 222, 128, 0.15);
-  border: 1px solid rgba(74, 222, 128, 0.4);
-  color: #86efac;
+  background: var(--adm-success-bg);
+  border: 1px solid var(--adm-success-border);
+  color: var(--adm-success-text);
 }
 
 .error {
-  background: rgba(248, 113, 113, 0.15);
-  border: 1px solid rgba(248, 113, 113, 0.4);
-  color: #fecaca;
+  background: var(--adm-danger-bg);
+  border: 1px solid var(--adm-danger-border);
+  color: var(--adm-danger-text);
 }
 
 .refusals {
-  background: rgba(248, 113, 113, 0.12);
-  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: var(--adm-danger-bg);
+  border: 1px solid var(--adm-danger-border);
   border-radius: 14px;
   padding: 16px 20px;
-  color: #fecaca;
+  color: var(--adm-danger-text);
 }
 
 .refusalsTitle {
@@ -77,8 +80,8 @@
 }
 
 .panel {
-  background: rgba(25, 21, 48, 0.7);
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
   border-radius: 18px;
   padding: 20px;
 }
@@ -96,7 +99,7 @@
 }
 
 .emptyState {
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   text-align: center;
   padding: 24px;
 }
@@ -114,8 +117,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: rgba(25, 21, 48, 0.7);
-  border: 1px solid rgba(142, 122, 255, 0.25);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
   border-radius: 18px;
   padding: 14px;
 }
@@ -125,7 +128,7 @@
   aspect-ratio: 4 / 3;
   object-fit: cover;
   border-radius: 12px;
-  background: rgba(8, 6, 21, 0.6);
+  background: var(--adm-input-bg);
 }
 
 .editForm {
@@ -148,17 +151,17 @@
 .formRow input[type='text'] {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(142, 122, 255, 0.35);
-  background: rgba(8, 6, 21, 0.6);
-  color: var(--text-primary);
+  border: 1px solid var(--adm-border-input);
+  background: var(--adm-input-bg);
+  color: var(--adm-text);
   font-size: 0.95rem;
   padding: 8px 12px;
 }
 
 .formRow input:focus-visible {
   outline: none;
-  border-color: rgba(198, 176, 255, 0.9);
-  box-shadow: 0 0 0 1px rgba(198, 176, 255, 0.4);
+  border-color: var(--adm-focus);
+  box-shadow: 0 0 0 1px var(--adm-focus);
 }
 
 .moveRow {
@@ -170,9 +173,9 @@
   width: 40px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(139, 92, 246, 0.55);
-  background: rgba(139, 92, 246, 0.2);
-  color: var(--accent-primary);
+  border: 1px solid var(--adm-accent-border);
+  background: var(--adm-accent-bg);
+  color: var(--adm-accent);
   font-size: 1.1rem;
   cursor: pointer;
 }
@@ -185,9 +188,9 @@
 .primaryButton {
   padding: 8px 18px;
   border-radius: 999px;
-  border: 1px solid rgba(139, 92, 246, 0.55);
-  background: rgba(139, 92, 246, 0.25);
-  color: var(--accent-primary);
+  border: 1px solid var(--adm-accent-border);
+  background: var(--adm-accent-bg);
+  color: var(--adm-accent);
   font-weight: 600;
   cursor: pointer;
   transition: border-color 150ms ease, background 150ms ease;
@@ -195,20 +198,20 @@
 
 .primaryButton:hover,
 .primaryButton:focus-visible {
-  border-color: rgba(198, 176, 255, 0.85);
-  background: rgba(139, 92, 246, 0.35);
+  border-color: var(--adm-focus);
+  background: var(--adm-accent-bg-hover);
 }
 
 .danger {
-  border-color: rgba(248, 113, 113, 0.45);
-  background: rgba(248, 113, 113, 0.18);
-  color: #fecaca;
+  border-color: var(--adm-danger-border);
+  background: var(--adm-danger-bg);
+  color: var(--adm-danger-text);
 }
 
 .danger:hover,
 .danger:focus-visible {
-  border-color: rgba(248, 113, 113, 0.7);
-  background: rgba(248, 113, 113, 0.26);
+  border-color: var(--adm-danger-border);
+  background: var(--adm-danger-bg-hover);
 }
 
 .deleteForm {
@@ -216,7 +219,7 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  border-top: 1px solid rgba(142, 122, 255, 0.2);
+  border-top: 1px solid var(--adm-border);
   padding-top: 12px;
 }
 
