@@ -1,0 +1,75 @@
+@use "admin-tokens" as *;
+
+.nav {
+  @include admin-tokens;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--adm-surface);
+  border-bottom: 1px solid var(--adm-border);
+  color: var(--adm-text);
+}
+
+.inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 10px clamp(20px, 5vw, 40px);
+  display: flex;
+  align-items: center;
+  gap: 12px 24px;
+  flex-wrap: wrap;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--adm-text-muted);
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.back:hover {
+  color: var(--adm-text);
+  border-color: var(--adm-border-input);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.link {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--adm-text-muted);
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.link:hover {
+  color: var(--adm-text);
+  background: var(--adm-surface-alt);
+}
+
+.active {
+  color: var(--adm-accent);
+  background: var(--adm-accent-bg);
+  border-color: var(--adm-accent-border);
+}
+
+.back:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--adm-focus);
+  outline-offset: 2px;
+}
