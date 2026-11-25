@@ -18,6 +18,18 @@ export default async function AdminHomePage() {
         "Valider les ressources proposees sur FRVResources, mettre en avant ou supprimer.",
       href: `${ADMIN_PANEL_PATH}/ressources`,
     },
+    {
+      title: "Évènements",
+      description:
+        "Gerer les évènements, rediger leurs articles par blocs et ajouter les photos de la galerie.",
+      href: `${ADMIN_PANEL_PATH}/evenements`,
+    },
+    {
+      title: "Staff",
+      description:
+        "Presenter les membres de l'equipe et leurs contributions.",
+      href: `${ADMIN_PANEL_PATH}/staff`,
+    },
     ...(isComiteSession(session)
       ? [
           {

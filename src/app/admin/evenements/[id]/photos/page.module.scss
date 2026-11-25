@@ -1,0 +1,231 @@
+@use "../../../admin-tokens" as *;
+
+.page {
+  @include admin-tokens;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(32px, 4vw, 48px) clamp(20px, 5vw, 40px) clamp(80px, 6vw, 120px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 4vw, 40px);
+  color: var(--adm-text);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.back {
+  color: var(--adm-text-muted);
+  font-size: 0.9rem;
+}
+
+.title {
+  margin: 8px 0 0;
+  font-size: clamp(2.2rem, 5vw, 2.8rem);
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--adm-text-muted);
+}
+
+.feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.success,
+.error {
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.success {
+  background: var(--adm-success-bg);
+  border: 1px solid var(--adm-success-border);
+  color: var(--adm-success-text);
+}
+
+.error {
+  background: var(--adm-danger-bg);
+  border: 1px solid var(--adm-danger-border);
+  color: var(--adm-danger-text);
+}
+
+.refusals {
+  background: var(--adm-danger-bg);
+  border: 1px solid var(--adm-danger-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  color: var(--adm-danger-text);
+}
+
+.refusalsTitle {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.refusals ul {
+  margin: 0;
+  padding-left: 20px;
+  word-break: break-word;
+}
+
+.panel {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.panelTitle {
+  margin: 0 0 16px;
+  font-size: 1.3rem;
+}
+
+.uploadForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.emptyState {
+  color: var(--adm-text-muted);
+  text-align: center;
+  padding: 24px;
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--adm-input-bg);
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formRow label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.formRow input[type='text'] {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--adm-border-input);
+  background: var(--adm-input-bg);
+  color: var(--adm-text);
+  font-size: 0.95rem;
+  padding: 8px 12px;
+}
+
+.formRow input:focus-visible {
+  outline: none;
+  border-color: var(--adm-focus);
+  box-shadow: 0 0 0 1px var(--adm-focus);
+}
+
+.moveRow {
+  display: flex;
+  gap: 8px;
+}
+
+.iconButton {
+  width: 40px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--adm-accent-border);
+  background: var(--adm-accent-bg);
+  color: var(--adm-accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.iconButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.primaryButton {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--adm-accent-border);
+  background: var(--adm-accent-bg);
+  color: var(--adm-accent);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.primaryButton:hover,
+.primaryButton:focus-visible {
+  border-color: var(--adm-focus);
+  background: var(--adm-accent-bg-hover);
+}
+
+.danger {
+  border-color: var(--adm-danger-border);
+  background: var(--adm-danger-bg);
+  color: var(--adm-danger-text);
+}
+
+.danger:hover,
+.danger:focus-visible {
+  border-color: var(--adm-danger-border);
+  background: var(--adm-danger-bg-hover);
+}
+
+.deleteForm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--adm-border);
+  padding-top: 12px;
+}
+
+.deleteForm label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}

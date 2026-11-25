@@ -1,11 +1,14 @@
+@use "../admin-tokens" as *;
+
 .page {
+  @include admin-tokens;
   max-width: 1080px;
   margin: 0 auto;
   padding: clamp(40px, 6vw, 72px) clamp(24px, 5vw, 48px) clamp(96px, 7vw, 140px);
   display: flex;
   flex-direction: column;
   gap: clamp(32px, 6vw, 48px);
-  color: var(--text-primary);
+  color: var(--adm-text);
 }
 
 .header {
@@ -22,7 +25,7 @@
 .subtitle {
   margin: 0;
   max-width: 680px;
-  color: var(--text-secondary);
+  color: var(--adm-text-muted);
   line-height: 1.6;
 }
 
@@ -30,19 +33,19 @@
   margin: 0;
   padding: 14px 18px;
   border-radius: 14px;
-  background: rgba(35, 30, 68, 0.75);
-  border: 1px solid rgba(142, 122, 255, 0.3);
-  color: var(--text-secondary);
+  background: var(--adm-surface-alt);
+  border: 1px solid var(--adm-border);
+  color: var(--adm-text-muted);
   font-size: 0.95rem;
   line-height: 1.5;
 }
 
 .hint code {
   font-family: var(--font-mono, 'Fira Code', 'SFMono-Regular', ui-monospace, monospace);
-  background: rgba(17, 13, 38, 0.8);
+  background: var(--adm-surface-alt);
   padding: 2px 6px;
   border-radius: 6px;
-  color: var(--text-primary);
+  color: var(--adm-text);
 }
 
 @media (max-width: 720px) {
