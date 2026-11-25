@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.scss'
+import 'vanilla-cookieconsent/dist/cookieconsent.css'
+import './cookie-consent.scss'
+import CookieConsentManager from '@/components/privacy/CookieConsentManager'
 import AuthProvider from '../components/SessionProvider'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
@@ -43,8 +46,8 @@ export default function RootLayout({
       : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     root.classList.toggle('dark', theme === 'dark');
     root.setAttribute('data-theme', theme);
-  } catch (error) {
-    console.warn('Unable to apply saved theme preference', error);
+  } catch {
+    console.warn('Unable to apply saved theme preference');
   }
 })();`.replace('</script>', '<\\/script>')
 
@@ -54,7 +57,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider><CookieConsentManager />{children}</AuthProvider>
       </body>
     </html>
   )

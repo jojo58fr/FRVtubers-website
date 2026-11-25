@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
+import PrivacyNotice from '@/components/legal/PrivacyNotice'
 import styles from './Onboarding.module.scss'
 
 type OnboardingFormProps = {
@@ -121,6 +122,7 @@ const OnboardingForm = ({ hasVtuberRole }: OnboardingFormProps) => {
         />
       </label>
 
+      <PrivacyNotice kind="application" />
       <button type="submit" disabled={disabled}>
         {status === 'submitting' ? 'Envoi en cours…' : hasVtuberRole ? 'Déjà validé' : 'Envoyer ma candidature'}
       </button>

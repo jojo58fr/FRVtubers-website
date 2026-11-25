@@ -1,7 +1,9 @@
+import { isTrustedMutation, readJsonObject } from '@/lib/request-security'
+import { securityLog } from '@/lib/security-log'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import prisma from '@/lib/prisma'
-import { authOptions } from '../../../auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import { isModeratorSession } from '@/lib/admin-auth'
 import { notifyResourcePublished } from '@/lib/resources-webhook'
 
@@ -21,14 +23,20 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions)
   if (!isModeratorSession(session)) {
+    securityLog('warn', 'admin.access_denied')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (!isTrustedMutation(request)) {
+    securityLog('warn', 'admin.access_denied')
+    return NextResponse.json({ error: 'Origine non autorisée' }, { status: 403 })
   }
 
   const { id } = await params
 
   let payload: Record<string, unknown>
   try {
-    payload = (await request.json()) as Record<string, unknown>
+    payload = await readJsonObject(request)
   } catch {
     return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 })
   }
@@ -90,10 +98,16 @@ export async function PATCH(
   })
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions)
   if (!isModeratorSession(session)) {
+    securityLog('warn', 'admin.access_denied')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (!isTrustedMutation(request)) {
+    securityLog('warn', 'admin.access_denied')
+    return NextResponse.json({ error: 'Origine non autorisée' }, { status: 403 })
   }
 
   const { id } = await params

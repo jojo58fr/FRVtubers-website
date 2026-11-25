@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import emailjs from '@emailjs/browser'
+import PrivacyNotice from '@/components/legal/PrivacyNotice'
 
 type Status = 'idle' | 'sending' | 'success' | 'error' | 'misconfigured'
 
@@ -64,8 +65,8 @@ const ContactForm = ({ className, successClassName, errorClassName }: ContactFor
       form.reset()
       setStatus('success')
       setMessage('Message envoyé. Merci !')
-    } catch (error) {
-      console.error('EmailJS error', error)
+    } catch {
+      console.error('EmailJS error')
       setStatus('error')
       setMessage('Envoi impossible. Réessaie plus tard.')
     }
@@ -92,6 +93,7 @@ const ContactForm = ({ className, successClassName, errorClassName }: ContactFor
         <span>Message</span>
         <textarea name="message" rows={5} placeholder="Raconte-nous tout" required />
       </label>
+      <PrivacyNotice kind="contact" />
       <button type="submit" disabled={status === 'sending'}>
         {status === 'sending' ? 'Envoi en cours…' : 'Envoyer'}
       </button>

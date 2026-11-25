@@ -236,22 +236,6 @@
   font-size: 14px;
 }
 
-.showcaseEmbed {
-  position: relative;
-  width: 100%;
-  border: 1px solid var(--border-soft);
-  border-radius: 24px;
-  overflow: hidden;
-  background: var(--surface-elevated);
-  aspect-ratio: 16 / 9;
-}
-
-.showcaseEmbed iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
 .showcaseBody {
   display: flex;
   flex-direction: column;

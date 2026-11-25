@@ -106,7 +106,8 @@ const DonPage = () => {
               récurente. Chaque euro aide la scene du VTubing francophone à grandir.
             </p>
           </div>
-          <iframe src="https://opencollective.com/embed/frvtubers/donate" style={{width: "100%", minHeight: "100vh", borderRadius: "15px"}}></iframe>
+          <p>Le formulaire de don s’ouvre sur Open Collective. Ce service applique sa propre politique de confidentialité
+            et peut utiliser des cookies ; aucune intégration de son formulaire ne se charge ici.</p>
           <Link href={OPEN_COLLECTIVE_URL} target="_blank" rel="noreferrer" className={styles.calloutCta}>
             Donner via Open Collective (ouvrir sur un nouvelle onglet)
             <FontAwesomeIcon icon={faArrowUpRightFromSquare} />

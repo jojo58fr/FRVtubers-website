@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSession, signIn, signOut } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowUpRightFromSquare, faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
 import ThemeToggle from '../ThemeToggle'
+import { hasSessionIdentity } from '@/lib/session-identity'
 import styles from './SiteHeader.module.scss'
 
 import FRVtubersLogo from '../../assets/FRVtubers_logo_without_subtitle.png'
@@ -45,9 +47,10 @@ const renderNavLabel = (label: string, openInNewTab?: boolean) => (
 )
 
 const SiteHeader = ({ navItems }: SiteHeaderProps) => {
+  const router = useRouter()
   const { data: session } = useSession()
   const hasVtuberRole = session?.hasVtuberRole ?? false
-  const isAuthenticated = Boolean(session)
+  const isAuthenticated = hasSessionIdentity(session)
   const [menuOpen, setMenuOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const [openMobileItem, setOpenMobileItem] = useState<string | null>(null)
@@ -67,12 +70,6 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
 
     return () => {
       document.documentElement.style.overflow = overflowRef.current
-    }
-  }, [menuOpen])
-
-  useEffect(() => {
-    if (!menuOpen) {
-      setOpenMobileItem(null)
     }
   }, [menuOpen])
 
@@ -99,12 +96,18 @@ const SiteHeader = ({ navItems }: SiteHeaderProps) => {
     dropdownCloseTimeout.current = setTimeout(() => setOpenDropdown(null), 160)
   }
 
-  const closeMenu = () => setMenuOpen(false)
-  const toggleMenu = () => setMenuOpen((prev) => !prev)
+  const closeMenu = () => {
+    setMenuOpen(false)
+    setOpenMobileItem(null)
+  }
+  const toggleMenu = () => {
+    if (menuOpen) closeMenu()
+    else setMenuOpen(true)
+  }
 
   const handleSignIn = () => {
     closeMenu()
-    void signIn('discord', { callbackUrl: '/' })
+    router.push('/login')
   }
 
   const handleSignOut = () => {

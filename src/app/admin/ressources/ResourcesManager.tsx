@@ -270,7 +270,12 @@ const ResourcesManager = ({
                 <div className={styles.cardBody}>
                   <div className={styles.preview}>
                     {resource.previewImageUrl ? (
-                      <img src={resource.previewImageUrl} alt={`Aperçu de ${resource.assetTitle}`} />
+                      <div className={styles.previewPlaceholder}>
+                        <a href={resource.previewImageUrl} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">
+                          Ouvrir l’aperçu de {resource.assetTitle}
+                        </a>
+                        <small>Le lien contacte le site de l’image et lui communique votre adresse IP.</small>
+                      </div>
                     ) : (
                       <div className={styles.previewPlaceholder}>Aucun aperçu</div>
                     )}

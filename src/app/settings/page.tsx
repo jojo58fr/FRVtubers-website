@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { authOptions } from '../api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import UserSettingsForm from '@/components/settings/UserSettingsForm'
 import { DEFAULT_PREFERENCES } from '@/lib/user-preferences'
 import styles from './settings.module.scss'
@@ -9,7 +9,7 @@ import styles from './settings.module.scss'
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session) {
+  if (!session?.user?.id) {
     redirect(`/login?callbackUrl=${encodeURIComponent('/settings')}`)
   }
 

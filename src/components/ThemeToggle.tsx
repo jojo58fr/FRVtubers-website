@@ -15,8 +15,8 @@ export default function ThemeToggle() {
 
     try {
       await updateTheme(nextTheme)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      console.error('La mise à jour a échoué')
       setError('Sauvegarde échouée')
     }
   }
