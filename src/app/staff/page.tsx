@@ -6,6 +6,8 @@ import BackToTopButton from '@/components/BackToTopButton'
 import { mainNavItems } from '@/lib/navigation'
 import { listPublishedStaff } from '@/lib/staff'
 import { isSafeHttpUrl } from '@/lib/event-blocks'
+import { detectPlatform } from '@/lib/social-links'
+import SocialIcon from '@/components/SocialIcon'
 import styles from './page.module.scss'
 
 export const dynamic = 'force-dynamic'
@@ -78,13 +80,22 @@ const MemberCard = ({ member }: { member: Member }) => {
 
       {links.length > 0 ? (
         <ul className={styles.links}>
-          {links.map((link, index) => (
-            <li key={`${link.url}-${index}`}>
-              <a href={link.url} target="_blank" rel="noreferrer noopener">
-                {link.label}
-              </a>
-            </li>
-          ))}
+          {links.map((link, index) => {
+            const platform = detectPlatform(link.url)
+            return (
+              <li key={`${link.url}-${index}`}>
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  {...(platform ? { 'aria-label': link.label, title: link.label } : {})}
+                >
+                  <SocialIcon platform={platform} />
+                  {platform ? null : link.label}
+                </a>
+              </li>
+            )
+          })}
         </ul>
       ) : null}
 

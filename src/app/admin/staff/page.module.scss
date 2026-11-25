@@ -282,9 +282,51 @@
 
 .linkRow {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) minmax(160px, 2fr) auto;
+  grid-template-columns: 150px minmax(160px, 1fr) auto;
   gap: 8px;
   align-items: center;
+}
+
+.linkRowCustom {
+  grid-template-columns: 40px minmax(100px, 1fr) minmax(160px, 2fr) auto;
+}
+
+.linkIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--adm-text);
+  font-size: 1.1rem;
+}
+
+.linkPlatform {
+  font-size: 0.9rem;
+}
+
+.linkActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.linkAdd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.linkAdd .secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+a.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .linkRow input {
@@ -384,7 +426,8 @@
 
 @media (max-width: 720px) {
   .contributionForm,
-  .linkRow {
+  .linkRow,
+  .linkRowCustom {
     grid-template-columns: 1fr;
   }
 }

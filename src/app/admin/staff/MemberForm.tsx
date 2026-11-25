@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import SocialIcon from '@/components/SocialIcon'
+import { PLATFORMS, detectPlatform, getPlatform, type PlatformId } from '@/lib/social-links'
 import styles from './page.module.scss'
 
 export type PlainAdminMember = {
@@ -24,14 +26,34 @@ type MemberFormProps = {
   limits: { name: number; title: number; bio: number; linkLabel: number; linkUrl: number }
 }
 
-type Row = { key: number; label: string; url: string }
+// `platform` null = lien libre (libellé + adresse saisis à la main).
+type Row = { key: number; platform: PlatformId | null; label: string; url: string }
+
+const buildInitialRows = (links: Array<{ label: string; url: string }>): Row[] => {
+  const rows: Row[] = []
+  const used = new Set<number>()
+  PLATFORMS.forEach((platform) => {
+    const index = links.findIndex((link, i) => !used.has(i) && detectPlatform(link.url) === platform.id)
+    if (index >= 0) used.add(index)
+    rows.push({ key: rows.length, platform: platform.id, label: '', url: index >= 0 ? links[index].url : '' })
+  })
+  links.forEach((link, i) => {
+    if (!used.has(i)) rows.push({ key: rows.length, platform: null, label: link.label, url: link.url })
+  })
+  return rows
+}
 
 const MemberForm = ({ action, idPrefix, member, maxLinks, limits }: MemberFormProps) => {
-  const [rows, setRows] = useState<Row[]>(() =>
-    (member?.links ?? []).map((link, index) => ({ key: index, label: link.label, url: link.url })),
-  )
+  const [rows, setRows] = useState<Row[]>(() => buildInitialRows(member?.links ?? []))
   const [nextKey, setNextKey] = useState(rows.length)
   const id = (suffix: string) => `${idPrefix}-${suffix}`
+
+  const usedPlatforms = new Set(rows.map((row) => row.platform))
+  const missingPlatforms = PLATFORMS.filter((platform) => !usedPlatforms.has(platform.id))
+  const addRow = (platform: PlatformId | null) => {
+    setRows((current) => [...current, { key: nextKey, platform, label: '', url: '' }])
+    setNextKey(nextKey + 1)
+  }
 
   const updateRow = (key: number, patch: Partial<Row>) =>
     setRows((current) => current.map((row) => (row.key === key ? { ...row, ...patch } : row)))
@@ -71,47 +93,90 @@ const MemberForm = ({ action, idPrefix, member, maxLinks, limits }: MemberFormPr
 
       <fieldset className={styles.blocksFieldset}>
         <legend>Liens (http ou https uniquement)</legend>
+        <p className={styles.helperText}>
+          Laisse l’adresse vide pour ignorer un réseau. Le bouton de droite retire la ligne du formulaire.
+        </p>
         <div className={styles.linkRows}>
-          {rows.map((row, index) => (
-            <div key={row.key} className={styles.linkRow}>
-              <input
-                name="linkLabel"
-                aria-label={`Libellé du lien ${index + 1}`}
-                placeholder="Libellé"
-                maxLength={limits.linkLabel}
-                value={row.label}
-                onChange={(e) => updateRow(row.key, { label: e.target.value })}
-              />
-              <input
-                name="linkUrl"
-                type="url"
-                aria-label={`Adresse du lien ${index + 1}`}
-                placeholder="https://…"
-                maxLength={limits.linkUrl}
-                value={row.url}
-                onChange={(e) => updateRow(row.key, { url: e.target.value })}
-              />
+          {rows.map((row, index) => {
+            const platform = row.platform ? getPlatform(row.platform) : null
+            const submittedLabel = platform ? (row.url.trim() ? platform.label : '') : row.label
+            const name = platform ? platform.label : `lien libre ${index + 1}`
+            const detected = platform ? row.platform : detectPlatform(row.url)
+            const previewUrl = /^https?:\/\//i.test(row.url.trim()) ? row.url.trim() : null
+
+            return (
+              <div key={row.key} className={platform ? styles.linkRow : `${styles.linkRow} ${styles.linkRowCustom}`}>
+                <span className={styles.linkIcon} title={name}>
+                  <SocialIcon platform={detected} />
+                  {platform ? <span className={styles.linkPlatform}>{platform.label}</span> : null}
+                </span>
+
+                {platform ? (
+                  <input type="hidden" name="linkLabel" value={submittedLabel} />
+                ) : (
+                  <input
+                    name="linkLabel"
+                    aria-label={`Libellé du ${name}`}
+                    placeholder="Libellé"
+                    maxLength={limits.linkLabel}
+                    value={row.label}
+                    onChange={(e) => updateRow(row.key, { label: e.target.value })}
+                  />
+                )}
+                <input
+                  name="linkUrl"
+                  type="url"
+                  aria-label={platform ? `Adresse ${platform.label}` : `Adresse du ${name}`}
+                  placeholder={platform ? platform.placeholder : 'https://…'}
+                  maxLength={limits.linkUrl}
+                  value={row.url}
+                  onChange={(e) => updateRow(row.key, { url: e.target.value })}
+                />
+
+                <div className={styles.linkActions}>
+                  {previewUrl ? (
+                    <a
+                      href={previewUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className={styles.iconButton}
+                      aria-label={`Ouvrir ${platform ? platform.label : (row.label || 'le lien')} dans un nouvel onglet`}
+                    >
+                      ↗
+                    </a>
+                  ) : null}
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    aria-label={`Retirer ${platform ? platform.label : name}`}
+                    onClick={() => setRows((current) => current.filter((r) => r.key !== row.key))}
+                  >
+                    Retirer
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+
+          <div className={styles.linkAdd}>
+            {missingPlatforms.map((platform) => (
               <button
+                key={platform.id}
                 type="button"
                 className={styles.secondaryButton}
-                aria-label={`Retirer le lien ${index + 1}`}
-                onClick={() => setRows((current) => current.filter((r) => r.key !== row.key))}
+                disabled={rows.length >= maxLinks}
+                onClick={() => addRow(platform.id)}
               >
-                Retirer
+                <SocialIcon platform={platform.id} /> {platform.label}
               </button>
-            </div>
-          ))}
-          <div>
+            ))}
             <button
               type="button"
               className={styles.secondaryButton}
               disabled={rows.length >= maxLinks}
-              onClick={() => {
-                setRows((current) => [...current, { key: nextKey, label: '', url: '' }])
-                setNextKey(nextKey + 1)
-              }}
+              onClick={() => addRow(null)}
             >
-              Ajouter un lien
+              <SocialIcon platform={null} /> Autre lien
             </button>
           </div>
         </div>
