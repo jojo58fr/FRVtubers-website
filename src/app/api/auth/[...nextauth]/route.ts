@@ -342,6 +342,9 @@ export const authOptions: NextAuthOptions = {
     DiscordProvider({
       clientId: discordClientId,
       clientSecret: discordClientSecret,
+      // Discord now sends `iss=https://discord.com` on the callback (RFC 9207);
+      // openid-client rejects it unless the issuer is configured.
+      issuer: 'https://discord.com',
       authorization: {
         params: {
           scope: 'identify email guilds guilds.members.read',
